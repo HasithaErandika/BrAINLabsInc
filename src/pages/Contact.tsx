@@ -38,6 +38,26 @@ export const Contact = () => {
             {/* Contact Methods */}
             <section className="py-16 md:py-24">
                 <div className="container mx-auto px-4">
+                    {/* Map Section */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="max-w-6xl mx-auto mb-16 rounded-2xl overflow-hidden border border-border/50 shadow-lg h-[400px]"
+                    >
+                        <iframe
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15843.19446270836!2d79.972794!3d6.915199!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ae256db1a6771c5%3A0x2c63e352ea8f8c8!2sSLIIT!5e0!3m2!1sen!2slk!4v1645856754321!5m2!1sen!2slk"
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            title="SLIIT Location"
+                        />
+                    </motion.div>
+
                     <div className="grid md:grid-cols-4 gap-6 max-w-6xl mx-auto mb-16">
                         {[
                             {

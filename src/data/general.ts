@@ -1,12 +1,12 @@
 export const intro = {
-    title: "Welcome to BrAINLabs Inc.",
-    description: "BrAINLabs Inc. is a research laboratory dedicated to exploring the intersection of Artificial Intelligence (AI), Machine Learning (ML), and Neuroscience to develop innovative AI solutions to face the challenges of the 21st century. At the core of our research work, we draw inspiration from nature to develop AI systems that are explainable and efficient."
+    title: "Welcome to BrAIN Labs",
+    description: "BrAIN Labs is a research laboratory dedicated to exploring the intersection of Artificial Intelligence (AI), Machine Learning (ML), and Neuroscience to develop innovative AI solutions to face the challenges of the 21st century. At the core of our research work, we draw inspiration from nature to develop AI systems that are explainable and efficient."
 };
 
 export const mission = {
     iconName: "Target",
     title: "Mission",
-    description: "At BrAINLabs, we strive to explore the intricate relationship between artificial intelligence and the neuroscience of the human brain. By harnessing the latest advancements in technology and research, we aim to:",
+    description: "At BrAIN Labs, we strive to explore the intricate relationship between artificial intelligence and the neuroscience of the human brain. By harnessing the latest advancements in technology and research, we aim to:",
     points: [
         {
             iconName: "Brain",
@@ -26,13 +26,14 @@ export const mission = {
 export const collaborations = {
     iconName: "Handshake",
     title: "Collaborations",
-    description: "While we don't have specific collaborations at the moment, BrAINLabs is constantly exploring new partnerships with top-tier research institutions, universities, and industry leaders. Stay tuned for exciting announcements in the near future!"
+    description: "While we don't have specific collaborations at the moment, BrAIN Labs is constantly exploring new partnerships with top-tier research institutions, universities, and industry leaders. Stay tuned for exciting announcements in the near future!"
 };
 
 export const futureDirections = {
     iconName: "Rocket",
     title: "Future Directions",
-    description: "Looking ahead, BrAINLabs is committed to pushing the boundaries of AI and we are excited to pursue:",
+    description: "Looking ahead, BrAIN Labs is committed to pushing the boundaries of AI and we are excited to pursue:",
+
     points: [
         "AI for Cognitive Enhancement: Developing intelligent systems to assist with learning, memory, and decision-making.",
         "NeuroAI Integration: Creating seamless integration between brain-computer interfaces and AI models for advanced applications in health.",

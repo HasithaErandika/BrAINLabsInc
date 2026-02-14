@@ -1,10 +1,12 @@
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { intro } from '@/data/general';
-import { ArrowRight, Brain, Sparkles } from 'lucide-react';
+import { grants } from '@/data/grants';
+import { ArrowRight, Brain, Sparkles, Award } from 'lucide-react';
 import BrainLabsLogo from '@/components/ui/BrainLabsLogo';
 import { NeuralBrainIcon } from '@/components/ui/PageIcons';
 import { Link } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const Home = () => {
     return (
@@ -110,6 +112,57 @@ export const Home = () => {
                                 <stat.icon className="mx-auto text-primary mb-4" size={28} />
                                 <div className="text-3xl font-bold">{stat.value}</div>
                                 <div className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">{stat.label}</div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Grants Section */}
+            <section className="py-20 bg-background relative">
+                <div className="container mx-auto px-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="text-center mb-12"
+                    >
+                        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full mb-4">
+                            <Award size={16} />
+                            <span className="text-xs font-medium uppercase tracking-wide">Recognition</span>
+                        </div>
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4">Research Grants</h2>
+                        <p className="text-muted-foreground max-w-2xl mx-auto">
+                            Supported by leading funding agencies to pioneer the next generation of AI.
+                        </p>
+                    </motion.div>
+
+                    <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                        {grants.map((grant, idx) => (
+                            <motion.div
+                                key={grant.id}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: idx * 0.1, duration: 0.5 }}
+                            >
+                                <Card className="h-full border-border/50 hover:border-primary/30 transition-colors">
+                                    <CardHeader>
+                                        <div className="flex justify-between items-start gap-4">
+                                            <CardTitle className="text-xl leading-tight">{grant.title}</CardTitle>
+                                            <span className="text-xs font-mono bg-muted px-2 py-1 rounded text-muted-foreground whitespace-nowrap">
+                                                {grant.year}
+                                            </span>
+                                        </div>
+                                        <div className="text-sm font-medium text-primary pt-1">{grant.agency}</div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-sm text-muted-foreground leading-relaxed">
+                                            {grant.description}
+                                        </p>
+                                    </CardContent>
+                                </Card>
                             </motion.div>
                         ))}
                     </div>

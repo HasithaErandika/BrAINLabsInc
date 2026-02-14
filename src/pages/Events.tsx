@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { pastEvents, upcomingEvents, eventResources } from '@/data/events';
 import { WorkshopCalendarIcon } from '@/components/ui/PageIcons';
-import { Calendar, ExternalLink, MapPin, Clock } from 'lucide-react';
+import { Calendar, ExternalLink, MapPin } from 'lucide-react';
 
 export const Events = () => {
     return (
