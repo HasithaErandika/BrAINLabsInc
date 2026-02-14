@@ -54,7 +54,7 @@ export const faq = [
 
 export const contact = {
     twitter: "#",
-    github: "#",
+    github: "https://github.com/BrAINLabs-Inc",
     linkedin: "#",
     email: "mailto:info@brainlabs.inc"
 };

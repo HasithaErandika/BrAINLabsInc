@@ -22,11 +22,11 @@ export const Navbar: React.FC = () => {
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
             <div className="container mx-auto px-4">
-                <div className="flex items-center justify-between h-20">
+                <div className="flex items-center justify-between h-16">
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-3 group">
-                        <BrainLabsLogoIcon width={50} height={50} className="group-hover:scale-105 transition-transform" />
-                        <span className="text-xl font-bold group-hover:text-primary transition-colors">BrAINLabs</span>
+                        <BrainLabsLogoIcon width={40} height={40} className="group-hover:scale-105 transition-transform" />
+                        <span className="text-xl font-bold group-hover:text-primary transition-colors">BrAIN Labs</span>
                     </Link>
 
                     {/* Desktop Navigation */}
@@ -42,9 +42,9 @@ export const Navbar: React.FC = () => {
                             >
                                 {link.label}
                                 {isActive(link.path) && (
-                                    <span className="absolute -bottom-[21px] left-0 right-0 h-0.5 bg-primary" />
+                                    <span className="absolute -bottom-[20px] left-0 right-0 h-0.5 bg-primary" />
                                 )}
-                                <span className="absolute -bottom-[21px] left-0 right-0 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform" />
+                                <span className="absolute -bottom-[20px] left-0 right-0 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform" />
                             </Link>
                         ))}
                         <Link to="/contact">

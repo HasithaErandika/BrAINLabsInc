@@ -1,10 +1,12 @@
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { mission, collaborations, futureDirections, faq } from '@/data/general';
 import * as Icons from 'lucide-react';
-import { Target, Handshake, Rocket, HelpCircle } from 'lucide-react';
+import { Target, Handshake, Rocket, HelpCircle, ArrowRight } from 'lucide-react';
 import { MissionCompassIcon } from '@/components/ui/PageIcons';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 export const About = () => {
     const MissionIcon = (Icons as any)[mission.iconName] || Target;
@@ -14,7 +16,7 @@ export const About = () => {
     return (
         <div className="min-h-screen">
             {/* Hero Header */}
-            <section className="relative py-24 md:py-32 overflow-hidden">
+            <section className="relative pt-24 md:pt-32 pb-12 md:pb-16 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
 
                 <div className="container mx-auto px-4 relative z-10">
@@ -22,46 +24,46 @@ export const About = () => {
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.7 }}
-                        className="max-w-4xl"
+                        className="max-w-3xl lg:pl-4"
                     >
-                        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
-                            <MissionCompassIcon size={18} />
-                            <span className="text-sm font-medium">About Us</span>
+                        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full mb-5">
+                            <MissionCompassIcon size={16} />
+                            <span className="text-xs font-medium uppercase tracking-wide">About Us</span>
                         </div>
 
-                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight flex items-center gap-4">
-                            <MissionCompassIcon size={64} className="text-primary" />
-                            About BrAINLabs
+                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
+                            Pioneering AI Research
                         </h1>
 
-                        <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed">
-                            Pioneering research at the intersection of artificial intelligence and neuroscience.
+                        <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+                            Exploring the intersection of artificial intelligence and neuroscience to build the next generation of intelligent systems.
                         </p>
                     </motion.div>
                 </div>
             </section>
 
             {/* Mission Section */}
-            <section className="py-16 md:py-24">
-                <div className="container mx-auto px-4">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="max-w-5xl mx-auto"
-                    >
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="p-4 bg-primary/10 rounded-2xl">
-                                <MissionIcon className="text-primary" size={36} />
+            <section className="py-12 md:py-16">
+                <div className="container mx-auto px-4 lg:pl-8">
+                    <div className="max-w-5xl">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="mb-10"
+                        >
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-2.5 bg-primary/10 rounded-lg">
+                                    <MissionIcon className="text-primary" size={24} />
+                                </div>
+                                <h2 className="text-2xl md:text-3xl font-bold">{mission.title}</h2>
                             </div>
-                            <h2 className="text-4xl md:text-5xl font-bold">{mission.title}</h2>
-                        </div>
+                            <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl">
+                                {mission.description}
+                            </p>
+                        </motion.div>
 
-                        <p className="text-xl text-muted-foreground mb-12 leading-relaxed">
-                            {mission.description}
-                        </p>
-
-                        <div className="grid md:grid-cols-3 gap-6">
+                        <div className="grid md:grid-cols-3 gap-5">
                             {mission.points.map((point, idx) => {
                                 const PointIcon = (Icons as any)[point.iconName] || Target;
                                 return (
@@ -72,110 +74,120 @@ export const About = () => {
                                         viewport={{ once: true }}
                                         transition={{ delay: idx * 0.1, duration: 0.6 }}
                                     >
-                                        <Card className="h-full hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 border-border/50 hover:border-primary/50 group">
-                                            <CardHeader>
-                                                <PointIcon className="text-primary mb-4 group-hover:scale-110 transition-transform" size={32} />
-                                                <CardDescription className="text-base text-foreground leading-relaxed">
+                                        <Card className="h-full hover:shadow-md hover:shadow-primary/5 transition-all duration-300 border-border/50 hover:border-primary/40 group">
+                                            <CardHeader className="space-y-4">
+                                                <PointIcon className="text-primary group-hover:scale-110 transition-transform duration-300" size={28} />
+                                                <p className="text-sm font-medium leading-relaxed">
                                                     {point.text}
-                                                </CardDescription>
+                                                </p>
                                             </CardHeader>
                                         </Card>
                                     </motion.div>
                                 );
                             })}
                         </div>
-                    </motion.div>
+                    </div>
                 </div>
             </section>
 
             {/* Collaborations */}
-            <section className="py-16 bg-card/30">
-                <div className="container mx-auto px-4">
+            <section className="py-16 bg-muted/30">
+                <div className="container mx-auto px-4 lg:pl-8">
                     <motion.div
-                        initial={{ opacity: 0, y: 30 }}
+                        initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="max-w-4xl mx-auto"
+                        className="max-w-4xl"
                     >
-                        <Card className="border-primary/20">
-                            <CardHeader>
-                                <div className="flex items-center gap-4 mb-2">
-                                    <CollabIcon className="text-primary" size={32} />
-                                    <CardTitle className="text-3xl">{collaborations.title}</CardTitle>
-                                </div>
-                                <CardDescription className="text-lg leading-relaxed">
+                        <div className="flex items-start gap-4">
+                            <div className="p-2.5 bg-primary/10 rounded-lg shrink-0 mt-1">
+                                <CollabIcon className="text-primary" size={24} />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-bold mb-3">{collaborations.title}</h2>
+                                <p className="text-base text-muted-foreground leading-relaxed mb-6">
                                     {collaborations.description}
-                                </CardDescription>
-                            </CardHeader>
-                        </Card>
+                                </p>
+                                <Link to="/contact">
+                                    <Button variant="outline" size="sm" className="group">
+                                        Partner with Us
+                                        <ArrowRight size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                                    </Button>
+                                </Link>
+                            </div>
+                        </div>
                     </motion.div>
                 </div>
             </section>
 
             {/* Future Directions */}
             <section className="py-16 md:py-24">
-                <div className="container mx-auto px-4">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="max-w-5xl mx-auto"
-                    >
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="p-4 bg-primary/10 rounded-2xl">
-                                <FutureIcon className="text-primary" size={36} />
+                <div className="container mx-auto px-4 lg:pl-8">
+                    <div className="max-w-5xl">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="mb-10"
+                        >
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-2.5 bg-primary/10 rounded-lg">
+                                    <FutureIcon className="text-primary" size={24} />
+                                </div>
+                                <h2 className="text-2xl md:text-3xl font-bold">{futureDirections.title}</h2>
                             </div>
-                            <h2 className="text-4xl md:text-5xl font-bold">{futureDirections.title}</h2>
-                        </div>
+                            <p className="text-base text-muted-foreground leading-relaxed max-w-3xl">
+                                {futureDirections.description}
+                            </p>
+                        </motion.div>
 
-                        <p className="text-xl text-muted-foreground mb-12 leading-relaxed">
-                            {futureDirections.description}
-                        </p>
-
-                        <div className="grid md:grid-cols-2 gap-6">
+                        <div className="grid md:grid-cols-2 gap-5">
                             {futureDirections.points.map((point, idx) => (
                                 <motion.div
                                     key={idx}
-                                    initial={{ opacity: 0, x: -20 }}
+                                    initial={{ opacity: 0, x: -10 }}
                                     whileInView={{ opacity: 1, x: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ delay: idx * 0.1, duration: 0.6 }}
                                 >
-                                    <Card className="h-full hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 border-border/50 hover:border-primary/50">
-                                        <CardContent className="pt-6">
-                                            <p className="text-base leading-relaxed">{point}</p>
+                                    <Card className="h-full hover:shadow-md hover:shadow-primary/5 transition-all duration-300 border-border/50 hover:border-primary/40 group">
+                                        <CardContent className="pt-6 flex items-start gap-3">
+                                            <div className="min-w-1.5 h-1.5 rounded-full bg-primary mt-2 group-hover:scale-125 transition-transform" />
+                                            <p className="text-sm leading-relaxed text-muted-foreground group-hover:text-foreground transition-colors">
+                                                {point}
+                                            </p>
                                         </CardContent>
                                     </Card>
                                 </motion.div>
                             ))}
                         </div>
-                    </motion.div>
+                    </div>
                 </div>
             </section>
 
             {/* FAQ */}
-            <section className="py-16 bg-card/30">
-                <div className="container mx-auto px-4">
+            <section className="py-16 bg-muted/30 border-t border-border/50">
+                <div className="container mx-auto px-4 lg:pl-8">
                     <motion.div
-                        initial={{ opacity: 0, y: 30 }}
+                        initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="max-w-3xl mx-auto"
+                        className="max-w-2xl"
                     >
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="p-4 bg-primary/10 rounded-2xl">
-                                <HelpCircle className="text-primary" size={36} />
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="p-2.5 bg-primary/10 rounded-lg">
+                                <HelpCircle className="text-primary" size={24} />
                             </div>
-                            <h2 className="text-4xl md:text-5xl font-bold">Frequently Asked Questions</h2>
+                            <h2 className="text-2xl font-bold">Frequently Asked Questions</h2>
                         </div>
 
-                        <Accordion type="single" collapsible className="space-y-4">
+                        <Accordion type="single" collapsible className="space-y-3">
                             {faq.map((item, idx) => (
-                                <AccordionItem key={idx} value={`item-${idx}`} className="border border-border rounded-lg px-6 bg-card">
-                                    <AccordionTrigger className="text-lg font-semibold hover:text-primary transition-colors">
+                                <AccordionItem key={idx} value={`item-${idx}`} className="border border-border/60 rounded-lg px-4 bg-background/50">
+                                    <AccordionTrigger className="text-base font-medium hover:text-primary transition-colors py-4">
                                         {item.question}
                                     </AccordionTrigger>
-                                    <AccordionContent className="text-base text-muted-foreground leading-relaxed">
+                                    <AccordionContent className="text-sm text-muted-foreground leading-relaxed pb-4">
                                         {item.answer}
                                     </AccordionContent>
                                 </AccordionItem>
