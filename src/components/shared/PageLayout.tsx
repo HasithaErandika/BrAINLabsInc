@@ -7,7 +7,7 @@ export const PageLayout: React.FC = () => {
     return (
         <div className="min-h-screen bg-background text-foreground flex flex-col">
             <Navbar />
-            <main className="flex-1">
+            <main className="flex-1 pt-20"> {/* Added pt-20 to account for larger fixed navbar */}
                 <Outlet />
             </main>
             <Footer />

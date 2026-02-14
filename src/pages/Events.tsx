@@ -125,7 +125,7 @@ const EventCard = ({ event, index, upcoming = false }: {
             viewport={{ once: true }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
         >
-            <Card className="h-full hover:shadow-md hover:shadow-primary/5 transition-all duration-300 border-border/50 hover:border-primary/40 group flex flex-col">
+            <Card className="h-full transition-all duration-300 border-border/50 hover:border-primary/40 group flex flex-col">
                 <CardHeader className="pb-3 space-y-3">
                     <div className="flex items-start justify-between gap-4">
                         <Badge variant="secondary" className={`text-[10px] px-2 py-0.5 font-medium uppercase tracking-wider ${upcoming ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>

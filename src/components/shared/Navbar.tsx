@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { BrainLabsLogoIcon } from '@/components/ui/BrainLabsLogo';
+import { BrainLabsHorizontalLogo } from '@/components/ui/BrainLabsLogo';
 
 export const Navbar: React.FC = () => {
     const [isOpen, setIsOpen] = React.useState(false);
@@ -20,13 +20,12 @@ export const Navbar: React.FC = () => {
     const isActive = (path: string) => location.pathname === path;
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+        <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 transition-all duration-300">
             <div className="container mx-auto px-4">
-                <div className="flex items-center justify-between h-16">
+                <div className="flex items-center justify-between h-20"> {/* INCREASED HEIGHT from h-16 to h-20 to fit larger logo */}
                     {/* Logo */}
-                    <Link to="/" className="flex items-center gap-3 group">
-                        <BrainLabsLogoIcon width={40} height={40} className="group-hover:scale-105 transition-transform" />
-                        <span className="text-xl font-bold group-hover:text-primary transition-colors">BrAIN Labs</span>
+                    <Link to="/" className="flex items-center gap-1 group"> {/* Removed gap-3 as logo has spacing */}
+                        <BrainLabsHorizontalLogo width={220} height={55} className="group-hover:opacity-80 transition-opacity" />
                     </Link>
 
                     {/* Desktop Navigation */}
