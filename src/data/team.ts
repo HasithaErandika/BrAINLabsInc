@@ -23,7 +23,7 @@ export const team: TeamMember[] = [
         ],
         contact: "mahima.w@sliit.lk",
         linkedin: "https://www.linkedin.com/in/mahimaweerasinghe/",
-        image: "/src/assets/images/mahima-weerasinghe.jpeg"
+        image: "/assets/images/mahima-weerasinghe.jpeg"
     },
     {
         name: "Dr. Dinuka Sahabandu",
@@ -39,7 +39,7 @@ export const team: TeamMember[] = [
         ],
         contact: "dinuka.s@sliit.lk",
         linkedin: "https://www.linkedin.com/in/dinuka-sahabandu-48898726b/",
-        image: "/src/assets/images/dinuka-sahabandu.jpeg"
+        image: "/assets/images/dinuka-sahabandu.jpeg"
     },
     {
         name: "Dr. Dharshana Kasthurirathna",
@@ -54,7 +54,7 @@ export const team: TeamMember[] = [
         ],
         contact: "dharshana.k@sliit.lk",
         linkedin: "https://www.linkedin.com/in/dharshana-kasthurirathna-a4a3275/",
-        image: "/src/assets/images/dharshana_kasthurirathna.jpeg"
+        image: "/assets/images/dharshana_kasthurirathna.jpeg"
     },
     {
         name: "Dr. Kapila Dissanayaka",
@@ -69,7 +69,7 @@ export const team: TeamMember[] = [
         ],
         contact: "kapila.d@sliit.lk",
         linkedin: "https://www.linkedin.com/in/kapila-d-dissanayaka/",
-        image: "/src/assets/images/kapila_dissanayaka.jpeg"
+        image: "/assets/images/kapila_dissanayaka.jpeg"
     },
     {
         name: "Mr. Jeewaka Perera",
@@ -85,7 +85,7 @@ export const team: TeamMember[] = [
         ],
         contact: "jeewaka.p@sliit.lk",
         linkedin: "https://www.linkedin.com/in/jeewakaperera/",
-        image: "/src/assets/images/jeewaka_perera.jpeg"
+        image: "/assets/images/jeewaka_perera.jpeg"
     },
     {
         name: "Ms. Madhumini Gunaratne",
@@ -99,7 +99,7 @@ export const team: TeamMember[] = [
             "AI in Agriculture"
         ],
         contact: "madhumini.g@sliit.lk",
-        image: "/src/assets/images/madhumini_gunaratne.jpeg"
+        image: "/assets/images/madhumini_gunaratne.jpeg"
     },
     {
         name: "Mr. Asiri Gawesha",
@@ -114,7 +114,7 @@ export const team: TeamMember[] = [
         ],
         contact: "asiri.g@sliit.lk",
         linkedin: "https://www.linkedin.com/in/asiri-gawesha-090617168/",
-        image: "/src/assets/images/asiri_gawesha.jpeg"
+        image: "/assets/images/asiri_gawesha.jpeg"
     },
     {
         name: "Mr. Sanka Mohottala",
@@ -129,6 +129,6 @@ export const team: TeamMember[] = [
         ],
         contact: "sanka.m@sliit.lk",
         linkedin: "https://www.linkedin.com/in/sankamohottala/",
-        image: "/src/assets/images/sanka_mohottala.jpeg"
+        image: "/assets/images/sanka_mohottala.jpeg"
     }
 ];
