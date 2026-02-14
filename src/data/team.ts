@@ -54,7 +54,7 @@ export const team: TeamMember[] = [
         ],
         contact: "dharshana.k@sliit.lk",
         linkedin: "https://www.linkedin.com/in/dharshana-kasthurirathna-a4a3275/",
-        image: "/src/assets/images/dharshana-kasthurirathne.jpeg"
+        image: "/src/assets/images/dharshana_kasthurirathna.jpeg"
     },
     {
         name: "Dr. Kapila Dissanayaka",

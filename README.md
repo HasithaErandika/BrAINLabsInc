@@ -41,3 +41,17 @@ For collaborations, inquiries, or more information, please visit our website or 
 
 **Email**: info@brainlabs.inc
 **GitHub**: [https://github.com/BrAINLabs-Inc](https://github.com/BrAINLabs-Inc)
+
+## Deployment
+
+To deploy this project to Cloudflare Pages:
+
+1.  **Build**:
+    ```bash
+    npm run build
+    ```
+2.  **Deploy**:
+    ```bash
+    npm run deploy
+    ```
+    This command uses `wrangler` to deploy the `dist` folder.
