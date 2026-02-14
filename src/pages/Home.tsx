@@ -6,13 +6,11 @@ import { ArrowRight, Brain, Sparkles, Award } from 'lucide-react';
 import { NeuralBrainIcon } from '@/components/ui/PageIcons';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CursorEffect } from '@/components/ui/CursorEffect';
 import { BrainNetwork } from '@/components/ui/BrainNetwork';
 
 export const Home = () => {
     return (
         <div className="relative">
-            <CursorEffect />
             {/* Hero Section */}
             <section className="relative min-h-[calc(100vh-5rem)] flex items-center justify-center overflow-hidden py-10 md:py-0">
                 {/* Premium Background */}

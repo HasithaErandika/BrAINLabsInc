@@ -9,7 +9,7 @@ export const Contact = () => {
     return (
         <div className="min-h-screen">
             {/* Hero Header */}
-            <section className="relative py-24 md:py-32 overflow-hidden">
+            <section className="relative py-24 md:py-32 overflow-hidden" data-cursor="default">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
 
                 <div className="container mx-auto px-4 relative z-10">
