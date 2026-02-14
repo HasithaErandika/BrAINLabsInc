@@ -5,7 +5,6 @@ export interface TeamMember {
     country: string;
     researchInterests: string[];
     contact: string;
-    website: string;
     linkedin?: string;
     image?: string;
 }
@@ -23,7 +22,6 @@ export const team: TeamMember[] = [
             "AI in Agriculture"
         ],
         contact: "mahima.w@sliit.lk",
-        website: "mahima.w",
         linkedin: "https://www.linkedin.com/in/mahimaweerasinghe/",
         image: "/src/assets/images/mahima-weerasinghe.jpeg"
     },
@@ -39,8 +37,7 @@ export const team: TeamMember[] = [
             "AI Ethics",
             "Security in Machine Learning"
         ],
-        contact: "sdinuka@uw.edu",
-        website: "dinuka.s",
+        contact: "dinuka.s@sliit.lk",
         linkedin: "https://www.linkedin.com/in/dinuka-sahabandu-48898726b/",
         image: "/src/assets/images/dinuka-sahabandu.jpeg"
     },
@@ -56,7 +53,6 @@ export const team: TeamMember[] = [
             "Machine Learning"
         ],
         contact: "dharshana.k@sliit.lk",
-        website: "dharshana.k",
         linkedin: "https://www.linkedin.com/in/dharshana-kasthurirathna-a4a3275/",
         image: "/src/assets/images/dharshana-kasthurirathne.jpeg"
     },
@@ -72,7 +68,6 @@ export const team: TeamMember[] = [
             "AI in Agriculture"
         ],
         contact: "kapila.d@sliit.lk",
-        website: "kapila.d",
         linkedin: "https://www.linkedin.com/in/kapila-d-dissanayaka/",
         image: "/src/assets/images/kapila_dissanayaka.jpeg"
     },
@@ -88,8 +83,7 @@ export const team: TeamMember[] = [
             "Security in Machine Learning",
             "Machine Learning"
         ],
-        contact: "dinuka.s@sliit.lk",
-        website: "jeewaka.p",
+        contact: "jeewaka.p@sliit.lk",
         linkedin: "https://www.linkedin.com/in/jeewakaperera/",
         image: "/src/assets/images/jeewaka_perera.jpeg"
     },
@@ -105,7 +99,6 @@ export const team: TeamMember[] = [
             "AI in Agriculture"
         ],
         contact: "madhumini.g@sliit.lk",
-        website: "madhumini.g",
         image: "/src/assets/images/madhumini_gunaratne.jpeg"
     },
     {
@@ -120,7 +113,6 @@ export const team: TeamMember[] = [
             "Computer Vision"
         ],
         contact: "asiri.g@sliit.lk",
-        website: "asiri.g",
         linkedin: "https://www.linkedin.com/in/asiri-gawesha-090617168/",
         image: "/src/assets/images/asiri_gawesha.jpeg"
     },
@@ -135,8 +127,7 @@ export const team: TeamMember[] = [
             "Applications of Deep Learning in Scientific Domains",
             "Brain-Inspired Neural Networks"
         ],
-        contact: "sanka.mo@sliit.lk",
-        website: "sanka.mo",
+        contact: "sanka.m@sliit.lk",
         linkedin: "https://www.linkedin.com/in/sankamohottala/",
         image: "/src/assets/images/sanka_mohottala.jpeg"
     }
