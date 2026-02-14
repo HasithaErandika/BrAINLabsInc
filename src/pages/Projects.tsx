@@ -45,7 +45,7 @@ export const Projects = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2, duration: 0.6 }}
                         >
-                            <TabsList className="grid w-full max-w-sm mx-auto grid-cols-3 mb-10 h-10">
+                            <TabsList className="grid w-full max-w-sm mx-auto grid-cols-3 mb-10 h-auto min-h-[40px]">
                                 <TabsTrigger value="all" className="text-sm">All</TabsTrigger>
                                 <TabsTrigger value="llm" className="text-sm">LLMs</TabsTrigger>
                                 <TabsTrigger value="neuro" className="text-sm">Neuromorphic</TabsTrigger>
@@ -104,7 +104,7 @@ const CategorySection = ({ category, index }: { category: typeof projects[0], in
                         transition={{ delay: idx * 0.08, duration: 0.5 }}
                         whileHover={{ y: -3 }}
                     >
-                        <Card className="h-full border-border/50 hover:border-primary/40 transition-all duration-300 hover:shadow-md hover:shadow-primary/5 group">
+                        <Card className="h-full border-border/50 hover:border-primary/40 transition-all duration-300 group">
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-base font-semibold group-hover:text-primary transition-colors leading-snug">
                                     {project.title}

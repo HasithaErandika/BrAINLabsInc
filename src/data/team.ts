@@ -6,6 +6,7 @@ export interface TeamMember {
     researchInterests: string[];
     contact: string;
     linkedin?: string;
+    website?: string;
     image?: string;
 }
 

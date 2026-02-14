@@ -77,7 +77,7 @@ export const Publications = () => {
                                             viewport={{ once: true }}
                                             transition={{ delay: idx * 0.1, duration: 0.5 }}
                                         >
-                                            <Card className="hover:shadow-md hover:shadow-primary/5 transition-all duration-300 border-border/50 hover:border-primary/30 group">
+                                            <Card className="transition-all duration-300 border-border/50 hover:border-primary/30 group">
                                                 <CardContent className="p-5 md:p-6">
                                                     <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start">
                                                         <div className="hidden md:flex shrink-0 p-3 bg-muted/50 rounded-lg text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-colors">

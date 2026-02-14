@@ -3,71 +3,78 @@ import { Button } from '@/components/ui/button';
 import { intro } from '@/data/general';
 import { grants } from '@/data/grants';
 import { ArrowRight, Brain, Sparkles, Award } from 'lucide-react';
-import BrainLabsLogo from '@/components/ui/BrainLabsLogo';
 import { NeuralBrainIcon } from '@/components/ui/PageIcons';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CursorEffect } from '@/components/ui/CursorEffect';
+import { BrainNetwork } from '@/components/ui/BrainNetwork';
 
 export const Home = () => {
     return (
         <div className="relative">
+            <CursorEffect />
             {/* Hero Section */}
-            <section className="relative py-24 md:py-32 overflow-hidden">
+            <section className="relative min-h-[calc(100vh-5rem)] flex items-center justify-center overflow-hidden py-10 md:py-0">
                 {/* Premium Background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
+                <div className="absolute inset-0 bg-background" />
 
-                {/* Decorative Orbs - Apple-inspired */}
-                <div className="absolute top-20 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-                <div className="absolute bottom-20 left-10 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl" />
+                {/* Decorative Orbs - Subtle & Professional */}
+                <div className="absolute top-1/4 right-10 w-[30rem] h-[30rem] bg-foreground/5 rounded-full blur-3xl animate-pulse" />
+                <div className="absolute bottom-1/4 left-10 w-[40rem] h-[40rem] bg-foreground/3 rounded-full blur-3xl" />
 
                 <div className="container mx-auto px-4 relative z-10">
-                    <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-                        {/* Content - Apple-style large typography */}
+                    <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+                        {/* Content - Professional Typography */}
                         <motion.div
-                            initial={{ opacity: 0, y: 40 }}
+                            initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, ease: [0.6, 0.05, 0.01, 0.9] }}
-                            className="space-y-6 md:space-y-8 lg:pl-4"
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                            className="space-y-8"
                         >
-                            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full backdrop-blur-sm">
-                                <NeuralBrainIcon size={16} />
-                                <span className="text-xs md:text-sm font-medium">AI Research Laboratory</span>
+                            <div className="inline-flex items-center gap-2 border border-border bg-card px-4 py-1.5 rounded-full">
+                                <NeuralBrainIcon size={14} className="text-foreground" />
+                                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">AI Research Laboratory</span>
                             </div>
 
-                            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.1] tracking-tight">
+                            <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight text-foreground">
                                 <span className="block">Brain-Inspired</span>
-                                <span className="block text-primary">AI Solutions</span>
+                                <span className="block text-muted-foreground">Intelligence.</span>
                             </h1>
 
-                            <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl">
+                            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-xl">
                                 {intro.description}
                             </p>
 
-                            <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                            <div className="flex flex-col sm:flex-row gap-4 pt-4">
                                 <Link to="/projects">
-                                    <Button size="default" className="bg-primary hover:bg-primary/90 group text-sm px-6 h-10">
+                                    <Button size="lg" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-8 h-12 text-sm font-medium">
                                         Explore Research
-                                        <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={16} />
+                                        <ArrowRight className="ml-2" size={16} />
                                     </Button>
                                 </Link>
                                 <Link to="/publications">
-                                    <Button size="default" variant="outline" className="text-sm px-6 h-10">
+                                    <Button size="lg" variant="outline" className="rounded-full px-8 h-12 text-sm font-medium border-border hover:bg-secondary">
                                         View Publications
                                     </Button>
                                 </Link>
                             </div>
                         </motion.div>
 
-                        {/* Logo Animation */}
+                        {/* Hero Graphic / 3D Element - Electric Brain */}
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
+                            initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 1, delay: 0.2, ease: [0.6, 0.05, 0.01, 0.9] }}
-                            className="hidden lg:flex justify-center pt-4"
+                            transition={{ duration: 1, delay: 0.2 }}
+                            className="relative hidden lg:flex justify-center items-center h-full w-full"
                         >
-                            <div className="relative">
-                                <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
-                                <BrainLabsLogo width={400} height={400} className="relative drop-shadow-2xl" />
+                            <div className="relative w-full h-[500px] max-w-lg flex items-center justify-center">
+                                {/* Abstract Background Glow */}
+                                <div className="absolute inset-0 bg-gradient-to-tr from-foreground/5 to-transparent rounded-full blur-3xl" />
+
+                                {/* 3D Brain Network */}
+                                <div className="relative z-10 w-full h-full">
+                                    <BrainNetwork />
+                                </div>
                             </div>
                         </motion.div>
                     </div>
@@ -75,26 +82,27 @@ export const Home = () => {
 
                 {/* Scroll Indicator */}
                 <motion.div
-                    className="absolute bottom-8 left-1/2 -translate-x-1/2"
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.5, duration: 0.8 }}
+                    className="absolute bottom-8 left-1/2 -translate-x-1/2 cursor-pointer"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1, duration: 1 }}
+                    onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
                 >
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <span className="text-sm">Scroll to explore</span>
+                    <div className="flex flex-col items-center gap-2">
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Scroll</span>
                         <motion.div
-                            animate={{ y: [0, 8, 0] }}
+                            animate={{ y: [0, 5, 0] }}
                             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                            className="w-1 h-8 bg-gradient-to-b from-primary to-transparent rounded-full"
+                            className="w-px h-12 bg-gradient-to-b from-foreground/50 to-transparent"
                         />
                     </div>
                 </motion.div>
             </section>
 
-            {/* Stats Section - Microsoft Fluent inspired */}
-            <section className="py-20 bg-card/50 backdrop-blur-xl border-y border-border">
+            {/* Stats Section - Clean & Minimal */}
+            <section className="py-24 bg-card border-y border-border">
                 <div className="container mx-auto px-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-6xl mx-auto">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-12 max-w-6xl mx-auto">
                         {[
                             { value: "8", label: "Researchers", icon: Brain },
                             { value: "7", label: "Active Projects", icon: Sparkles },
@@ -107,11 +115,15 @@ export const Home = () => {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ delay: idx * 0.1, duration: 0.6 }}
-                                className="text-center space-y-2"
+                                className="text-center group"
                             >
-                                <stat.icon className="mx-auto text-primary mb-4" size={28} />
-                                <div className="text-3xl font-bold">{stat.value}</div>
-                                <div className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">{stat.label}</div>
+                                <div className="mb-6 flex justify-center">
+                                    <div className="p-4 rounded-full bg-secondary group-hover:bg-foreground/5 transition-colors">
+                                        <stat.icon className="text-foreground" size={24} />
+                                    </div>
+                                </div>
+                                <div className="text-4xl font-bold text-foreground mb-2">{stat.value}</div>
+                                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">{stat.label}</div>
                             </motion.div>
                         ))}
                     </div>

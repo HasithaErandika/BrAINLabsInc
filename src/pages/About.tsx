@@ -74,7 +74,7 @@ export const About = () => {
                                         viewport={{ once: true }}
                                         transition={{ delay: idx * 0.1, duration: 0.6 }}
                                     >
-                                        <Card className="h-full hover:shadow-md hover:shadow-primary/5 transition-all duration-300 border-border/50 hover:border-primary/40 group">
+                                        <Card className="h-full transition-all duration-300 border-border/50 hover:border-primary/40 group">
                                             <CardHeader className="space-y-4">
                                                 <PointIcon className="text-primary group-hover:scale-110 transition-transform duration-300" size={28} />
                                                 <p className="text-sm font-medium leading-relaxed">
@@ -150,7 +150,7 @@ export const About = () => {
                                     viewport={{ once: true }}
                                     transition={{ delay: idx * 0.1, duration: 0.6 }}
                                 >
-                                    <Card className="h-full hover:shadow-md hover:shadow-primary/5 transition-all duration-300 border-border/50 hover:border-primary/40 group">
+                                    <Card className="h-full transition-all duration-300 border-border/50 hover:border-primary/40 group">
                                         <CardContent className="pt-6 flex items-start gap-3">
                                             <div className="min-w-1.5 h-1.5 rounded-full bg-primary mt-2 group-hover:scale-125 transition-transform" />
                                             <p className="text-sm leading-relaxed text-muted-foreground group-hover:text-foreground transition-colors">
