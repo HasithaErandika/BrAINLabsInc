@@ -21,7 +21,7 @@ export const publications: Publication[] = [
         authors: "M. Weerasinghe, D. Parry, G. Y. Wang, J. Whalley",
         venue: "ArXiv Preprint",
         year: 2023,
-        link: "https://arxiv.org"
+        link: "https://arxiv.org/abs/2203.07039"
     },
     {
         title: "Incorporating Structural Plasticity Approaches in Spiking Neural Networks for EEG Modelling",

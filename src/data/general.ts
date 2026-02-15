@@ -57,5 +57,5 @@ export const contact = {
     twitter: "#",
     github: "https://github.com/BrAINLabs-Inc",
     linkedin: "#",
-    email: "mailto:info@brainlabs.inc"
+    email: "mailto:mahima.w@sliit.lk"
 };
