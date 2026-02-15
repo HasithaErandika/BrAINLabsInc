@@ -17,5 +17,5 @@ export const grants: Grant[] = [
         year: "2025",
         description: "Research into energy-efficient diverse AI architectures inspired by neural dynamics.",
     },
-    // Add more grants here as needed
+    
 ];

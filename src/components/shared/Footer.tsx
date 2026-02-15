@@ -88,9 +88,13 @@ export const Footer: React.FC = () => {
                     <p className="text-xs text-muted-foreground">
                         &copy; {new Date().getFullYear()} BrAIN Labs. All rights reserved.
                     </p>
-                    <p className="text-xs text-muted-foreground/60">
-                        Sri Lanka Institute of Information Technology
-                    </p>
+                    {/* <div className="flex items-center gap-3">
+                        <img
+                            src="/assets/images/sliit-uni-logo-black.jpg"
+                            alt="SLIIT"
+                            className="h-8 opacity-80 hover:opacity-100 transition-opacity mix-blend-multiply dark:mix-blend-screen"
+                        />
+                    </div> */}
                 </div>
             </div>
         </footer>

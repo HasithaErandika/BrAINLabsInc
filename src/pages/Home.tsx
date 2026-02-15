@@ -113,15 +113,18 @@ export const Home = () => {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ delay: idx * 0.1, duration: 0.6 }}
-                                className="text-center group"
                             >
-                                <div className="mb-6 flex justify-center">
-                                    <div className="p-4 rounded-full bg-secondary group-hover:bg-foreground/5 transition-colors">
-                                        <stat.icon className="text-foreground" size={24} />
-                                    </div>
-                                </div>
-                                <div className="text-4xl font-bold text-foreground mb-2">{stat.value}</div>
-                                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">{stat.label}</div>
+                                <Card className="h-full border-border/50 hover:border-black transition-all duration-300 group">
+                                    <CardContent className="flex flex-col items-center justify-center p-6 bg-card hover:bg-card/50">
+                                        <div className="mb-6 flex justify-center">
+                                            <div className="p-4 rounded-full bg-secondary group-hover:bg-foreground/5 transition-colors">
+                                                <stat.icon className="text-foreground" size={24} />
+                                            </div>
+                                        </div>
+                                        <div className="text-4xl font-bold text-foreground mb-2">{stat.value}</div>
+                                        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">{stat.label}</div>
+                                    </CardContent>
+                                </Card>
                             </motion.div>
                         ))}
                     </div>
