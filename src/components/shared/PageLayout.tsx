@@ -11,7 +11,7 @@ export const PageLayout: React.FC = () => {
             <CursorEffect />
             <ProfessionalBackground />
             <Navbar />
-            <main className="flex-1 pt-20 relative z-10"> {/* Added pt-20 to account for larger fixed navbar */}
+            <main className="flex-1 pt-20 relative z-10"> 
                 <Outlet />
             </main>
             <Footer />
