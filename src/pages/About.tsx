@@ -7,6 +7,7 @@ import { Target, Handshake, Rocket, HelpCircle, ArrowRight } from 'lucide-react'
 import { MissionCompassIcon } from '@/components/ui/PageIcons';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { SEO } from '@/components/shared/SEO';
 
 export const About = () => {
     const MissionIcon = (Icons as any)[mission.iconName] || Target;
@@ -15,6 +16,11 @@ export const About = () => {
 
     return (
         <div className="min-h-screen">
+            <SEO
+                title="About BrAIN Labs"
+                description="Learn about BrAIN Labs' mission to pioneer AI and neuroscience research, our collaborations, and future directions."
+                keywords={["About BrAIN Labs", "AI Mission", "Neuroscience Research", "AI Collaborations"]}
+            />
             {/* Hero Header */}
             <section className="relative pt-24 md:pt-32 pb-12 md:pb-16 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />

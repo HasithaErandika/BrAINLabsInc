@@ -6,10 +6,16 @@ import { team } from '@/data/team';
 import { CollaborationIcon } from '@/components/ui/PageIcons';
 import { Mail, Linkedin, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { SEO } from '@/components/shared/SEO';
 
 export const Team = () => {
     return (
         <div className="min-h-screen">
+            <SEO
+                title="Our Team"
+                description="Meet the multidisciplinary team of experts pushing the boundaries of AI and neuroscience research at BrAIN Labs."
+                keywords={["AI Researchers", "Neuroscience Team", "BrAIN Labs Team", "Research Scientists"]}
+            />
             {/* Hero Header */}
             <section className="relative pt-24 md:pt-32 pb-12 md:pb-16 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
