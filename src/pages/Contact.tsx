@@ -4,10 +4,16 @@ import { Button } from '@/components/ui/button';
 import { contact } from '@/data/general';
 import { CommunicationHubIcon } from '@/components/ui/PageIcons';
 import { Mail, Github, Twitter, Send, Linkedin } from 'lucide-react';
+import { SEO } from '@/components/shared/SEO';
 
 export const Contact = () => {
     return (
         <div className="min-h-screen">
+            <SEO
+                title="Contact Us"
+                description="Get in touch with BrAIN Labs for collaborations, inquiries, or research opportunities."
+                keywords={["Contact BrAIN Labs", "AI Collaboration", "Research Opportunities", "Contact Researchers"]}
+            />
             {/* Hero Header */}
             <section className="relative py-24 md:py-32 overflow-hidden" data-cursor="default">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />

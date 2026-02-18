@@ -5,6 +5,7 @@ import { publications } from '@/data/publications';
 import { AcademicPaperIcon } from '@/components/ui/PageIcons';
 import { ExternalLink, FileText, Calendar, BookOpen } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { SEO } from '@/components/shared/SEO';
 
 export const Publications = () => {
     // Group by year
@@ -18,6 +19,11 @@ export const Publications = () => {
 
     return (
         <div className="min-h-screen">
+            <SEO
+                title="Publications"
+                description="Browse peer-reviewed research papers and scholarly contributions from BrAIN Labs researchers."
+                keywords={["Research Publications", "AI Papers", "Neuroscience Research", "Academic Publications"]}
+            />
             {/* Hero Header */}
             <section className="relative pt-24 md:pt-32 pb-12 md:pb-16 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />

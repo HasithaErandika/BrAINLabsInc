@@ -8,9 +8,12 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BrainNetwork } from '@/components/ui/BrainNetwork';
 
+import { SEO } from '@/components/shared/SEO';
+
 export const Home = () => {
     return (
         <div className="relative">
+            <SEO />
             {/* Hero Section */}
             <section className="relative min-h-[calc(100vh-5rem)] flex items-center justify-center overflow-hidden py-10 md:py-0">
                 {/* Premium Background */}

@@ -5,10 +5,16 @@ import { projects } from '@/data/projects';
 import { ResearchLabIcon } from '@/components/ui/PageIcons';
 import * as Icons from 'lucide-react';
 import { MessageSquare } from 'lucide-react';
+import { SEO } from '@/components/shared/SEO';
 
 export const Projects = () => {
     return (
         <div className="min-h-screen">
+            <SEO
+                title="Research Projects"
+                description="Explore our cutting-edge research in Large Language Models (LLMs) and Neuromorphic Computing at BrAIN Labs."
+                keywords={["LLM", "Neuromorphic Computing", "AI Research", "BrAIN Labs Projects"]}
+            />
             {/* Hero Header */}
             <section className="relative pt-24 md:pt-32 pb-12 md:pb-16 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
