@@ -4,20 +4,20 @@ import { useEffect, useRef } from 'react';
 const PARTICLE_COUNT = 150;
 const CONNECTION_DISTANCE = 110;
 const ROTATION_SPEED = 0.002;
-const BASE_COLOR = 'rgba(0, 0, 0, 0.2)'; // Gray structure
-const PULSE_COLOR = '#FFFFFF'; // Bright white electricity
+const BASE_COLOR = 'rgba(0, 0, 0, 0.2)';
+const PULSE_COLOR = '#bebebeff';
 
 interface Point {
     x: number;
     y: number;
     z: number;
-    connections: number[]; // Indices of connected points
+    connections: number[];
 }
 
 interface Pulse {
     sourceIdx: number;
     targetIdx: number;
-    progress: number; // 0 to 1
+    progress: number;
     speed: number;
 }
 
@@ -26,6 +26,37 @@ export const BrainNetwork = () => {
     const pointsRef = useRef<Point[]>([]);
     const pulsesRef = useRef<Pulse[]>([]);
     const animationRef = useRef<number | null>(null);
+
+    // Interaction State
+    const rotationRef = useRef({ x: 0, y: 0 });
+    const isDraggingRef = useRef(false);
+    const lastMousePosRef = useRef({ x: 0, y: 0 });
+
+    const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+        isDraggingRef.current = true;
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+        lastMousePosRef.current = { x: clientX, y: clientY };
+    };
+
+    const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
+        if (!isDraggingRef.current) return;
+
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+        const deltaX = clientX - lastMousePosRef.current.x;
+        const deltaY = clientY - lastMousePosRef.current.y;
+
+        rotationRef.current.y += deltaX * 0.005;
+        rotationRef.current.x += deltaY * 0.005;
+
+        lastMousePosRef.current = { x: clientX, y: clientY };
+    };
+
+    const handleMouseUp = () => {
+        isDraggingRef.current = false;
+    };
 
     useEffect(() => {
         // Initialize Points on a Sphere/Ellipsoid
@@ -81,8 +112,6 @@ export const BrainNetwork = () => {
         window.addEventListener('resize', handleResize);
         handleResize();
 
-        let rotationAngle = 0;
-
         const render = () => {
             // Use canvas.width/height to clear full buffer correctly
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -93,27 +122,40 @@ export const BrainNetwork = () => {
             const centerX = width / 2;
             const centerY = height / 2;
 
-            rotationAngle += ROTATION_SPEED;
-            const cos = Math.cos(rotationAngle);
-            const sin = Math.sin(rotationAngle);
+            // Auto-rotation only when NOT dragging
+            if (!isDraggingRef.current) {
+                rotationRef.current.y += ROTATION_SPEED;
+            }
+
+            const cosY = Math.cos(rotationRef.current.y);
+            const sinY = Math.sin(rotationRef.current.y);
+            const cosX = Math.cos(rotationRef.current.x);
+            const sinX = Math.sin(rotationRef.current.x);
 
             // Project points 3D -> 2D
             const projectedPoints = pointsRef.current.map(p => {
-                // Rotate around Y axis
-                const rx = p.x * cos - p.z * sin;
-                const rz = p.x * sin + p.z * cos;
+                // Rotation Matrix Application
+                // 1. Rotate around Y (horizontal spin)
+                let x = p.x * cosY - p.z * sinY;
+                let z = p.x * sinY + p.z * cosY;
+                let y = p.y;
+
+                // 2. Rotate around X (vertical tilt)
+                const yOld = y;
+                y = yOld * cosX - z * sinX;
+                z = yOld * sinX + z * cosX;
 
                 // Simple perspective projection
-                const scale = 800 / (800 + rz);
-                const x2d = rx * scale + centerX;
-                const y2d = p.y * scale + centerY;
-                const alpha = (scale - 0.5) * 2; // Fade out back points
+                const scale = 800 / (800 + z);
+                const x2d = x * scale + centerX;
+                const y2d = y * scale + centerY;
+                const alpha = (scale - 0.5) * 2;
 
                 return {
                     x: x2d,
                     y: y2d,
-                    z: rz,
-                    alpha: Math.max(0.1, Math.min(1, alpha)) // Clamp alpha
+                    z: z,
+                    alpha: Math.max(0.1, Math.min(1, alpha))
                 };
             });
 
@@ -137,7 +179,7 @@ export const BrainNetwork = () => {
             });
 
             // Spawn Pulses
-            if (Math.random() < 0.08) { // 8% chance per frame to spawn a pulse
+            if (Math.random() < 0.08) {
                 const sourceIdx = Math.floor(Math.random() * pointsRef.current.length);
                 const source = pointsRef.current[sourceIdx];
                 if (source.connections.length > 0) {
@@ -165,13 +207,11 @@ export const BrainNetwork = () => {
                 const p1 = projectedPoints[pulse.sourceIdx];
                 const p2 = projectedPoints[pulse.targetIdx];
 
-                // Skip if end points are not visible/exist
                 if (!p1 || !p2 || p1.alpha < 0.1 || p2.alpha < 0.1) continue;
 
                 const x = p1.x + (p2.x - p1.x) * pulse.progress;
                 const y = p1.y + (p2.y - p1.y) * pulse.progress;
 
-                // Draw glowing head of the pulse
                 ctx.globalAlpha = 1;
                 ctx.shadowBlur = 8;
                 ctx.shadowColor = PULSE_COLOR;
@@ -197,8 +237,15 @@ export const BrainNetwork = () => {
     return (
         <canvas
             ref={canvasRef}
-            className="w-full h-full"
-            style={{ minHeight: '500px' }} // Ensure visibility even if parent collapses
+            className="w-full h-full cursor-grab active:cursor-grabbing"
+            style={{ minHeight: '500px' }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onTouchStart={handleMouseDown}
+            onTouchMove={handleMouseMove}
+            onTouchEnd={handleMouseUp}
         />
     );
 };

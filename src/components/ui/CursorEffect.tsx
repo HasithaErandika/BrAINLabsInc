@@ -7,8 +7,7 @@ export const CursorEffect = () => {
     const cursorX = useMotionValue(-100);
     const cursorY = useMotionValue(-100);
 
-    // Smooth spring physics for the cursor - FASTER & SNAPPIER
-    const springConfig = { damping: 25, stiffness: 700, mass: 0.1 };
+    const springConfig = { damping: 20, stiffness: 1000, mass: 0.05 };
     const cursorXSpring = useSpring(cursorX, springConfig);
     const cursorYSpring = useSpring(cursorY, springConfig);
 
@@ -21,7 +20,6 @@ export const CursorEffect = () => {
         const handleMouseOver = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
 
-            // Check if we are inside a "no-enlarge" zone
             if (target.closest('[data-cursor="default"]')) {
                 setIsHovering(false);
                 return;
@@ -43,7 +41,6 @@ export const CursorEffect = () => {
         window.addEventListener('mousemove', moveCursor);
         window.addEventListener('mouseover', handleMouseOver);
 
-        // Hide default cursor
         document.body.style.cursor = 'none';
 
         return () => {
@@ -59,21 +56,21 @@ export const CursorEffect = () => {
             style={{
                 x: cursorXSpring,
                 y: cursorYSpring,
-                translateX: '-50%', // Center the cursor
+                translateX: '-50%', 
                 translateY: '-50%',
             }}
         >
             {/* Main Cursor Container */}
             <motion.div
-                className="relative flex items-center justify-center p-1" // Reduced padding
+                className="relative flex items-center justify-center p-1" 
                 animate={{
-                    scale: isHovering ? 1.2 : 1, // Reduced scale factor
+                    scale: isHovering ? 1.2 : 1, 
                 }}
-                transition={{ duration: 0.15 }} // Faster transition
+                transition={{ duration: 0.15 }} 
             >
                 {/* Brain Icon - SMALLER */}
                 <div className="relative z-10 text-primary drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">
-                    <Brain size={16} strokeWidth={2.5} /> {/* Reduced size from 24 to 16 */}
+                    <Brain size={16} strokeWidth={2.5} /> 
                 </div>
 
                 {/* AI Scanner / Orbiting Ring */}
@@ -81,7 +78,7 @@ export const CursorEffect = () => {
                     className="absolute inset-0 border border-t-transparent border-primary/40 rounded-full"
                     style={{ width: '100%', height: '100%' }}
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} // Faster rotation
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} 
                 />
 
                 {/* Outer Pulse - SUBTLER */}
