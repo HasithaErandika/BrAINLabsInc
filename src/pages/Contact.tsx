@@ -75,10 +75,10 @@ export const Contact = () => {
                     {/* Channel cards */}
                     <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-5 max-w-6xl mx-auto mb-16">
                         {[
-                            { icon: Mail, title: 'Email', description: 'Send us an email', link: contact.email, label: 'info@brainlabs.inc', color: 'from-blue-500/10 to-blue-500/4' },
-                            { icon: Github, title: 'GitHub', description: 'Check out our code', link: contact.github, label: 'View Projects', color: 'from-foreground/8 to-foreground/3' },
-                            { icon: Linkedin, title: 'LinkedIn', description: 'Connect professionally', link: contact.linkedin, label: 'Follow Us', color: 'from-sky-500/10 to-sky-500/4' },
-                            { icon: Twitter, title: 'Twitter', description: 'Follow our updates', link: contact.twitter, label: '@brainlabs', color: 'from-cyan-500/10 to-cyan-500/4' },
+                            { icon: Mail, title: 'Email', description: 'Send us an email', link: contact.email, label: 'info@brainlabs.inc', color: 'from-brand-email/10 to-brand-email/5' },
+                            { icon: Github, title: 'GitHub', description: 'Check out our code', link: contact.github, label: 'View Projects', color: 'from-brand-github/10 to-brand-github/5' },
+                            { icon: Linkedin, title: 'LinkedIn', description: 'Connect professionally', link: contact.linkedin, label: 'Follow Us', color: 'from-brand-linkedin/10 to-brand-linkedin/5' },
+                            { icon: Twitter, title: 'Twitter', description: 'Follow our updates', link: contact.twitter, label: '@brainlabs', color: 'from-brand-twitter/10 to-brand-twitter/5' },
                         ].map((method, idx) => (
                             <motion.div
                                 key={idx}
