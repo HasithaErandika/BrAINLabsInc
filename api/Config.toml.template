@@ -1,0 +1,33 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# BrAIN Labs Backend — Config Template
+# Copy this file to   api/Config.toml   and fill in your values.
+# NEVER commit Config.toml to git — it is in .gitignore.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Root module variables ────────────────────────────────────────────────────
+
+# Server
+port = 8080
+
+# Google OAuth2
+googleClientId      = "your-google-client-id.apps.googleusercontent.com"
+googleClientSecret  = "your-google-client-secret"
+googleRedirectUri  = "http://localhost:8080/auth/google/callback"
+
+# Domain restriction — only this domain may log in
+allowedEmailDomain  = "brainlabsinc.org"
+
+# Where Ballerina redirects after OAuth completes
+adminRedirectUri    = "http://localhost:5174/auth/callback"
+
+# JWT signing secret (any strong random string, at least 32 chars)
+jwtSecret           = "change-me-to-a-strong-random-secret"
+
+# HuggingFace API token (from huggingface.co/settings/tokens)
+# Leave empty to disable AI features
+hfToken             = ""
+
+# ── Database module (modules/db) ─────────────────────────────────────────────
+[brainlabs.backend.db]
+supabaseUrl         = "https://xxxx.supabase.co"
+supabaseServiceKey  = "your-service-role-key"
