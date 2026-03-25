@@ -11,7 +11,7 @@ import {
   Briefcase
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { api, type MemberCV } from "../../lib/api";
+import { api} from "../../lib/api";
 import { StatCard } from "./components/StatCard";
 
 interface Stats {
@@ -78,12 +78,12 @@ export function ResearcherDashboard({ token, memberId }: { token: string, member
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Research Ecosystem</span>
           </div>
           <h1 className="text-4xl font-black text-zinc-900 tracking-tighter">Your <span className="text-zinc-300">Workspace</span></h1>
-          <p className="text-zinc-500 mt-2 font-medium">Manage your publications, projects, and researcher profile.</p>
+          <p className="text-zinc-500 mt-2 font-medium">Manage your publications, projects, and professional researcher profile.</p>
         </div>
         <div className="flex flex-col gap-2">
-           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">
+           <div className="flex items-center justify-end gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">
              <div className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
-             Profile Completion
+             Core Profile Health
            </div>
            <div className="w-48 h-2.5 bg-zinc-100 rounded-full overflow-hidden border border-zinc-200 p-[2px]">
               <div 
@@ -97,52 +97,52 @@ export function ResearcherDashboard({ token, memberId }: { token: string, member
 
       {/* Primary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard label="My Publications" value={loading ? "..." : stats.publications} icon={BookOpen} href="/publications" sub="Peer-reviewed work" />
+        <StatCard label="My Publications" value={loading ? "..." : stats.publications} icon={BookOpen} href="/publications" sub="Peer-reviewed research" />
         <StatCard label="Active Projects" value={loading ? "..." : stats.projects} icon={FlaskConical} href="/projects" sub="Research initiatives" />
         <StatCard label="Associated Grants" value={loading ? "..." : stats.grants} icon={Briefcase} href="/grants" sub="Funding & Sponsorships" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Quick Actions Card */}
-        <div className="bg-zinc-900 rounded-3xl p-10 text-white shadow-xl shadow-black/10 relative overflow-hidden group">
-           <div className="absolute -bottom-10 -right-10 opacity-5 group-hover:opacity-10 transition-opacity">
-              <PlusCircle size={240} />
+        <div className="bg-zinc-900 rounded-[2.5rem] p-10 text-white shadow-2xl shadow-black/10 relative overflow-hidden group">
+           <div className="absolute -bottom-20 -right-20 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-1000">
+              <PlusCircle size={300} />
            </div>
            <div className="relative">
-              <h3 className="text-2xl font-black tracking-tighter mb-4">Quick <span className="text-zinc-500 italic">Actions</span></h3>
+              <h3 className="text-2xl font-black tracking-tighter mb-6 italic">Rapid <span className="text-zinc-500">Actions</span></h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 <Link to="/publications" className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white hover:text-black transition-all group/btn">
-                    <div className="flex items-center gap-3">
-                       <Plus size={16} />
-                       <span className="text-xs font-bold uppercase tracking-widest">New Publication</span>
-                    </div>
-                    <ArrowUpRight size={14} className="opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-                 </Link>
-                 <Link to="/projects" className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white hover:text-black transition-all group/btn">
-                    <div className="flex items-center gap-3">
-                       <Plus size={16} />
-                       <span className="text-xs font-bold uppercase tracking-widest">New Project</span>
-                    </div>
-                    <ArrowUpRight size={14} className="opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-                 </Link>
+                 {[
+                   { label: "Add Publication", href: "/publications" },
+                   { label: "Add Project", href: "/projects" },
+                   { label: "New Blog Post", href: "/blog" },
+                   { label: "Submit Grant", href: "/grants" }
+                 ].map((action) => (
+                    <Link key={action.label} to={action.href} className="flex items-center justify-between p-5 bg-white/5 border border-white/10 rounded-2xl hover:bg-white hover:text-black transition-all group/btn active:scale-95">
+                      <div className="flex items-center gap-3">
+                        <Plus size={16} />
+                        <span className="text-[10px] font-black uppercase tracking-widest">{action.label}</span>
+                      </div>
+                      <ArrowUpRight size={14} className="opacity-0 group-hover/btn:opacity-100 transition-all -translate-x-1 group-hover/btn:translate-x-0" />
+                    </Link>
+                 ))}
               </div>
            </div>
         </div>
 
         {/* Profile Helper Card */}
-        <div className="bg-white border border-zinc-200 rounded-3xl p-10 shadow-sm flex flex-col justify-between">
+        <div className="bg-white border border-zinc-200 rounded-[2.5rem] p-10 shadow-sm flex flex-col justify-between transition-all hover:shadow-md">
            <div>
               <div className="flex items-center gap-3 mb-6">
-                 <div className="p-2 bg-zinc-50 rounded-xl border border-zinc-100">
-                    <User className="text-zinc-600" size={18} />
+                 <div className="p-2.5 bg-zinc-50 rounded-xl border border-zinc-100">
+                    <User className="text-zinc-900" size={20} />
                  </div>
-                 <h2 className="text-xl font-black text-zinc-900 tracking-tight underline decoration-amber-200 underline-offset-8">Profile Refinement</h2>
+                 <h2 className="text-xl font-black text-zinc-900 tracking-tight">Identity <span className="text-zinc-300">Refinement</span></h2>
               </div>
               <p className="text-sm text-zinc-500 leading-relaxed font-medium mb-8">
                 Enhance your professional visibility by ensuring all CV sections are meticulously detailed. A complete profile significantly improves discovery within the BrAIN Labs community.
               </p>
            </div>
-           <Link to="/account" className="flex items-center justify-center gap-2 w-full py-3.5 bg-black text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-lg border border-transparent hover:bg-zinc-800 transition-all active:scale-95">
+           <Link to="/account" className="flex items-center justify-center gap-2 w-full py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-lg border border-transparent hover:bg-zinc-800 transition-all active:scale-95">
              Refine Profile Details
              <CheckCircle2 size={14} />
            </Link>

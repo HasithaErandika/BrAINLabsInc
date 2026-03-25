@@ -8,19 +8,19 @@ import { persist } from "zustand/middleware";
 const BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
 export interface AuthUser {
-  id: string;
+  id: string; // Ensure id is present or correctly handled.
   name: string;
   email: string;
-  avatar?: string;
-  slug?: string;
+  avatar: string;
+  slug: string;
   position?: string;
 }
 
 interface AuthState {
-  user: AuthUser | null;
-  role: "super_admin" | "researcher" | null;
-  status: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED" | null;
   token: string | null;
+  role: "super_admin" | "researcher" | null;
+  user: AuthUser | null;
+  status: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED" | null;
   loginWithEmail: (email: string, password: string) => Promise<{ error: string | null }>;
   setSession: (token: string, role: "super_admin" | "researcher" | null, user: AuthUser, status: any) => void;
   updateUser: (updates: Partial<AuthUser>) => void;

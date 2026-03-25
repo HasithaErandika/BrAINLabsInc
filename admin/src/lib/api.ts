@@ -105,45 +105,6 @@ export interface ResearchPublication {
   updated_at?: string;
 }
 
-export interface Blog {
-  id?: string;
-  member_id?: string;
-  slug: string;
-  title: string;
-  excerpt?: string;
-  author_name?: string;
-  published_date?: string;
-  image_url?: string;
-  tags: string[];
-  content: string;
-  status: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED";
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface Event {
-  id?: string;
-  member_id?: string;
-  title: string;
-  event_type?: string;
-  event_date?: string;
-  description?: string;
-  link?: string;
-  status: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED";
-  created_at?: string;
-}
-
-export interface Grant {
-  id?: string;
-  member_id?: string;
-  title: string;
-  agency: string;
-  award_year?: string;
-  description?: string;
-  status: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED";
-  created_at?: string;
-}
-
 export interface Project {
   id?: string;
   member_id?: string;
@@ -161,6 +122,45 @@ export interface ProjectItem {
   title: string;
   description: string;
   display_order: number;
+}
+
+export interface Grant {
+  id?: string;
+  member_id?: string;
+  title: string;
+  agency: string;
+  award_year?: string;
+  description?: string;
+  status: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED";
+  created_at?: string;
+}
+
+export interface Event {
+  id?: string;
+  member_id?: string;
+  title: string;
+  event_type?: string;
+  event_date?: string;
+  description?: string;
+  link?: string;
+  status: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED";
+  created_at?: string;
+}
+
+export interface Blog {
+  id?: string;
+  member_id?: string;
+  slug: string;
+  title: string;
+  excerpt?: string;
+  author_name?: string;
+  published_date?: string;
+  image_url?: string;
+  tags?: string[];
+  content: string;
+  status: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED";
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface TutorialSeries {

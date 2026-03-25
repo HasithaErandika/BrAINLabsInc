@@ -26,9 +26,11 @@ function DevLoginHandler() {
   useEffect(() => {
     if (params.get("devlogin") === "1" && !token) {
       setSession("dev-mock-token", "super_admin", {
+        id: "mock-id",
         name: "Dr. Asel Silva",
         email: "asel@brainlabsinc.org",
         avatar: "https://api.dicebear.com/7.x/initials/svg?seed=AS&backgroundColor=000000&textColor=ffffff",
+        slug: "asel-silva"
       }, "PUBLISHED");
     }
   }, [params, setSession, token]);

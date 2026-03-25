@@ -48,10 +48,12 @@ export default function CompleteProfile() {
 
       // Update local session
       setSession(token!, "researcher", {
+        id: me.id,
         name: updated.name,
         email: updated.contact_email || user!.email,
         avatar: updated.image_url,
-        slug: updated.slug
+        slug: updated.slug,
+        position: updated.position
       }, "PENDING_REVIEW");
 
       navigate("/dashboard");
