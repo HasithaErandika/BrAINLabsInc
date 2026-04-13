@@ -20,19 +20,19 @@ import { useSessionTimeout } from "../../hooks/useSessionTimeout";
 import { Button } from "../ui/Button";
 
 const mainNav = [
-  { label: "Oversight",    path: "/dashboard",         icon: LayoutDashboard, roles: ["admin", "researcher", "research_assistant"] },
+  { label: "Dashboard",    path: "/dashboard",         icon: LayoutDashboard, roles: ["admin", "researcher", "research_assistant"] },
   { label: "Publications", path: "/publications",       icon: BookOpen,        roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Intelligence", path: "/blog",               icon: FileText,        roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Initiatives",  path: "/projects",           icon: FlaskConical,    roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Engagement",   path: "/events",             icon: CalendarDays,    roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Fiscal",       path: "/grants",             icon: Briefcase,       roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Pedagogy",     path: "/tutorials",          icon: GraduationCap,   roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Personnel",    path: "/dashboard/members",  icon: Users,           roles: ["admin"] },
+  { label: "Blog",         path: "/blog",               icon: FileText,        roles: ["admin", "researcher", "research_assistant"] },
+  { label: "Projects",     path: "/projects",           icon: FlaskConical,    roles: ["admin", "researcher", "research_assistant"] },
+  { label: "Events",       path: "/events",             icon: CalendarDays,    roles: ["admin", "researcher", "research_assistant"] },
+  { label: "Grants",       path: "/grants",             icon: Briefcase,       roles: ["admin", "researcher", "research_assistant"] },
+  { label: "Tutorials",    path: "/tutorials",          icon: GraduationCap,   roles: ["admin", "researcher", "research_assistant"] },
+  { label: "Members",      path: "/dashboard/members",  icon: Users,           roles: ["admin"] },
 ] as const;
 
 const settingsNav = [
-  { label: "Identity",  path: "/account",  icon: UserCircle, roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Protocols", path: "/settings", icon: Settings,   roles: ["admin", "researcher", "research_assistant"] },
+  { label: "Profile",  path: "/account",  icon: UserCircle, roles: ["admin", "researcher", "research_assistant"] },
+  { label: "Settings", path: "/settings", icon: Settings,   roles: ["admin", "researcher", "research_assistant"] },
 ] as const;
 
 export function AppLayout() {
@@ -57,29 +57,27 @@ export function AppLayout() {
   );
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-4 px-6 py-4 border-l-4 transition-all text-[11px] font-black uppercase tracking-widest ${
+    `flex items-center gap-4 px-6 py-4 rounded-xl transition-all text-xs font-bold ${
       isActive
-        ? "bg-black text-white border-black"
-        : "text-zinc-400 hover:text-black hover:bg-zinc-50 border-transparent"
+        ? "bg-zinc-900 text-white shadow-lg shadow-zinc-200"
+        : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
     }`;
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-white border-r border-black">
-      <div className="px-8 py-10 border-b border-black">
+    <div className="flex flex-col h-full bg-white p-6">
+      <div className="px-4 py-6 mb-8 bg-zinc-50 rounded-2xl border border-zinc-100">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-white border border-black p-1 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 bg-white rounded-xl border border-zinc-200 p-2 flex items-center justify-center shrink-0">
             <img src="/logo.png" alt="BrAIN Labs" className="w-full h-full object-contain grayscale" />
           </div>
           <div>
-            <p className="font-black text-lg text-black tracking-tighter leading-none uppercase">BrAIN Labs</p>
-            <p className="text-[9px] text-zinc-400 font-black mt-1 uppercase tracking-[0.3em]">Institutional Admin</p>
+            <p className="font-black text-base text-zinc-900 tracking-tight leading-none uppercase">BrAIN Labs</p>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto pt-8 space-y-12">
+      <nav className="flex-1 overflow-y-auto space-y-12 px-2 scroll-hide">
         <div className="space-y-1">
-          <p className="px-8 text-[9px] font-black text-zinc-300 uppercase tracking-[0.4em] mb-4">Operations</p>
           {filteredMain.map(item => (
             <NavLink
               key={item.path}
@@ -87,14 +85,13 @@ export function AppLayout() {
               onClick={() => setMobileOpen(false)}
               className={navLinkClass}
             >
-              <item.icon size={16} />
-              {item.label}
+              <item.icon size={18} />
+              <span className="tracking-tight">{item.label}</span>
             </NavLink>
           ))}
         </div>
 
         <div className="space-y-1 pb-10">
-          <p className="px-8 text-[9px] font-black text-zinc-300 uppercase tracking-[0.4em] mb-4">System Core</p>
           {filteredSettings.map(item => (
             <NavLink
               key={item.path}
@@ -102,23 +99,23 @@ export function AppLayout() {
               onClick={() => setMobileOpen(false)}
               className={navLinkClass}
             >
-              <item.icon size={16} />
-              {item.label}
+              <item.icon size={18} />
+              <span className="tracking-tight">{item.label}</span>
             </NavLink>
           ))}
         </div>
       </nav>
 
-      <div className="px-8 py-8 border-t border-black bg-zinc-50">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-xs font-black text-black shrink-0 uppercase">
+      <div className="mt-auto pt-6 border-t border-zinc-100">
+        <div className="bg-zinc-50 rounded-2xl p-4 flex items-center gap-4 border border-zinc-100">
+          <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center text-xs font-black text-white shrink-0 shadow-sm">
             {user?.first_name?.[0]}{user?.second_name?.[0]}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-black text-black leading-none truncate uppercase tracking-tight">
+            <p className="text-xs font-bold text-zinc-900 leading-none truncate uppercase tracking-tight">
               {user?.first_name} {user?.second_name}
             </p>
-            <p className="text-[9px] text-zinc-500 font-bold mt-1 uppercase tracking-widest truncate">
+            <p className="text-[10px] text-zinc-400 font-bold mt-1 uppercase tracking-widest truncate">
               {user?.role?.replace("_", " ")}
             </p>
           </div>
@@ -128,65 +125,62 @@ export function AppLayout() {
   );
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden text-black antialiased">
-      <aside className="hidden lg:flex flex-col w-72 shrink-0">
+    <div className="flex h-screen bg-zinc-50 overflow-hidden text-zinc-900 antialiased font-['Inter']">
+      <aside className="hidden lg:flex flex-col w-80 shrink-0 border-r border-zinc-100 shadow-sm z-40">
         <SidebarContent />
       </aside>
 
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-[100] lg:hidden animate-enter">
           <div
-            className="absolute inset-0 bg-black/80"
+            className="absolute inset-0 bg-zinc-900/40 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="absolute left-0 top-0 bottom-0 w-80 shadow-2xl animate-enter">
+          <aside className="absolute left-0 top-0 bottom-0 w-80 shadow-2xl">
             <SidebarContent />
           </aside>
         </div>
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-20 bg-white border-b border-black flex items-center justify-between px-10 shrink-0 z-30">
+        <header className="h-20 lg:h-24 bg-white/80 backdrop-blur-md border-b border-zinc-100 flex items-center justify-between px-8 lg:px-12 shrink-0 z-30">
           <div className="flex items-center gap-6">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden p-2 text-black border border-black hover:bg-zinc-50 transition-all font-black uppercase text-[10px]"
+              className="lg:hidden p-3 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-all font-black text-[10px]"
             >
                MENU
             </button>
-            <div className="hidden lg:block border-l-4 border-black pl-6">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-black">
-                Session Active — Institution Oversight Terminal
-              </p>
+            <div className="hidden lg:block">
+              <h1 className="text-xl font-black text-zinc-900 tracking-tight uppercase">Dashboard</h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-6">
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(v => !v)}
-                className={`p-3 transition-all flex items-center gap-3 border ${
-                  showNotifications ? "bg-black text-white border-black" : "text-black border-transparent hover:border-black"
+                className={`p-3.5 rounded-xl transition-all flex items-center gap-3 border ${
+                  showNotifications ? "bg-zinc-900 text-white border-zinc-900 shadow-lg shadow-zinc-200" : "bg-white text-zinc-600 border-zinc-200 hover:border-zinc-900 hover:text-zinc-900"
                 }`}
               >
                 <Bell size={18} />
-                <span className="text-[10px] font-black uppercase tracking-widest hidden md:block text-inherit">Communications</span>
               </button>
 
               {showNotifications && (
                 <div className="absolute top-16 right-0 w-80 z-50 animate-enter">
-                  <div className="bg-white border-2 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-black bg-zinc-50">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-black">Internal Feed</p>
-                      <button onClick={() => setShowNotifications(false)} className="text-zinc-400 hover:text-black">
+                  <div className="bg-white border border-zinc-200 rounded-2xl shadow-2xl overflow-hidden">
+                    <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100 bg-zinc-50">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic">Central Feed</p>
+                      <button onClick={() => setShowNotifications(false)} className="text-zinc-400 hover:text-zinc-900 transition-colors">
                         <X size={16} />
                       </button>
                     </div>
-                    <div className="py-20 flex flex-col items-center gap-4 text-center px-8">
-                      <div className="w-12 h-12 border-2 border-zinc-200 flex items-center justify-center text-zinc-200">
+                    <div className="py-20 flex flex-col items-center gap-4 text-center px-8 bg-white">
+                      <div className="w-16 h-16 bg-zinc-50 rounded-2xl flex items-center justify-center text-zinc-300 border border-zinc-100">
                         <Bell size={24} />
                       </div>
-                      <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">Secure: No Inbound Protocols</p>
+                      <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest leading-relaxed">System Secure<br/>Zero Inbound Signals</p>
                     </div>
                   </div>
                 </div>
@@ -196,42 +190,44 @@ export function AppLayout() {
             <Button
               variant="outline"
               onClick={() => setShowSignOutConfirm(true)}
-              className="hidden sm:flex text-[10px] font-black uppercase tracking-[0.2em] h-11 px-6 border-2 border-black hover:bg-black hover:text-white"
+              className="hidden sm:flex text-[10px] font-black uppercase tracking-widest h-12 px-8 rounded-xl border border-zinc-200 hover:border-zinc-900"
             >
-              Terminate Session
+              Sign Out
             </Button>
           </div>
         </header>
 
         {showSignOutConfirm && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-enter">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 animate-enter">
             <div
-              className="absolute inset-0 bg-black/90"
+              className="absolute inset-0 bg-zinc-900/60 backdrop-blur-md"
               onClick={() => setShowSignOutConfirm(false)}
             />
-            <div className="relative bg-white border-4 border-black p-12 w-full max-w-md shadow-[20px_20px_0px_0px_rgba(0,0,0,0.5)] text-center">
-              <div className="w-20 h-20 bg-black flex items-center justify-center text-white mx-auto mb-8">
+            <div className="relative bg-white border border-zinc-200 p-12 w-full max-w-md rounded-3xl shadow-2xl text-center">
+              <div className="w-24 h-24 bg-zinc-900 rounded-3xl flex items-center justify-center text-white mx-auto mb-10 shadow-xl shadow-zinc-200">
                 <LogOut size={40} />
               </div>
-              <h2 className="text-3xl font-black text-black tracking-tighter mb-4 uppercase">Confirm Termination?</h2>
-              <p className="text-xs text-zinc-500 font-bold mb-10 uppercase tracking-widest leading-loose bg-zinc-50 p-4">
-                Session tokens will be invalidated immediately. Unauthorized attempts to reconnect will be logged.
+              <h2 className="text-3xl font-black text-zinc-900 tracking-tighter mb-4 uppercase">Sign Out?</h2>
+              <p className="text-sm text-zinc-500 font-bold mb-10 uppercase tracking-wider leading-relaxed">
+                Your session will be cleared from this device.
               </p>
               <div className="grid grid-cols-2 gap-6">
-                <Button variant="outline" onClick={() => setShowSignOutConfirm(false)} className="uppercase text-[11px] font-black h-12 border-2 border-black">
-                  Resume
+                <Button variant="outline" onClick={() => setShowSignOutConfirm(false)} className="h-14 rounded-2xl font-black text-[11px]">
+                  Cancel
                 </Button>
-                <Button onClick={handleLogout} className="uppercase text-[11px] font-black h-12 bg-black text-white hover:bg-zinc-800">
-                  Execute Exit
+                <Button onClick={handleLogout} className="h-14 rounded-2xl font-black text-[11px] bg-zinc-900 text-white">
+                  Sign Out
                 </Button>
               </div>
             </div>
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto bg-white p-10 lg:p-16">
-          <div className="max-w-7xl mx-auto">
-            <Outlet />
+        <main className="flex-1 overflow-y-auto bg-zinc-50 p-6 lg:p-10 scroll-hide">
+          <div className="max-w-7xl mx-auto h-full">
+            <div className="bg-white rounded-[2rem] border border-zinc-200 shadow-sm min-h-full p-8 lg:p-16">
+              <Outlet />
+            </div>
           </div>
         </main>
       </div>

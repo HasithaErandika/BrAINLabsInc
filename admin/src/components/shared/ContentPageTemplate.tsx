@@ -96,23 +96,23 @@ export function ContentPageTemplate<
   if (view === "list") {
     return (
       <div className="space-y-12 animate-enter">
-        <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-black pb-8">
+        <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-zinc-100 pb-10">
           <div>
-            <div className="flex items-center gap-2 text-zinc-400 mb-2">
-              <Icon size={14} />
-              <span className="text-[10px] font-black uppercase tracking-[0.25em]">{title} Registry</span>
+            <div className="flex items-center gap-2 text-zinc-400 mb-3">
+              <Icon size={16} />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">{title} System</span>
             </div>
-            <h1 className="text-4xl font-black text-black tracking-tighter uppercase">{title}</h1>
-            <p className="text-xs font-bold text-zinc-500 uppercase tracking-tight mt-1">{subtitle}</p>
+            <h1 className="text-4xl lg:text-5xl font-black text-zinc-900 tracking-tight uppercase">{title}</h1>
+            <p className="text-sm font-medium text-zinc-500 mt-2">{subtitle}</p>
           </div>
           {!isAdmin && (
-            <Button onClick={handleCreate} className="h-12 px-6 text-[11px] font-black tracking-widest uppercase">
-              <Plus size={16} className="mr-2" /> New Entry
+            <Button onClick={handleCreate} className="h-14 px-8 text-xs font-bold rounded-2xl shadow-lg shadow-zinc-100">
+              <Plus size={18} className="mr-2" /> New Entry
             </Button>
           )}
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-6 items-center justify-between border-b border-zinc-100 pb-4">
+        <div className="flex flex-col sm:flex-row gap-6 items-center justify-between">
           <div className="relative flex-1 max-w-sm">
             <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
             <Input
@@ -124,13 +124,13 @@ export function ContentPageTemplate<
           </div>
 
           {filterOptions && (
-            <div className="flex bg-zinc-50 border border-zinc-200 p-1">
+            <div className="flex bg-zinc-100/50 p-1.5 rounded-2xl border border-zinc-100">
               {filterOptions.map(opt => (
                 <button
                   key={opt.value}
                   onClick={() => setFilter(opt.value)}
-                  className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${
-                    filter === opt.value ? "bg-black text-white" : "text-zinc-400 hover:text-black"
+                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                    filter === opt.value ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-400 hover:text-zinc-600"
                   }`}
                 >
                   {opt.label}
@@ -142,12 +142,13 @@ export function ContentPageTemplate<
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
-            <div className="col-span-full py-20 text-center uppercase text-[10px] font-black tracking-[0.5em] text-zinc-300 animate-pulse">
-              Syncing Ledger...
+            <div className="col-span-full py-40 text-center flex flex-col items-center gap-4">
+              <div className="w-12 h-12 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin"></div>
+              <p className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.4em]">Synchronizing Records</p>
             </div>
           ) : filteredItems.length === 0 ? (
-            <div className="col-span-full py-32 text-center border border-dashed border-zinc-200">
-              <p className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.3em]">No Records Found</p>
+            <div className="col-span-full py-40 text-center bg-zinc-50 rounded-[2rem] border border-dashed border-zinc-200">
+              <p className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.4em]">No Records Found</p>
             </div>
           ) : (
             filteredItems.map(item =>
@@ -164,13 +165,13 @@ export function ContentPageTemplate<
 
   if (view === "detail" && selectedItem) {
     return (
-      <div className="space-y-8 animate-enter">
-        <div className="flex items-center justify-between border-b border-black pb-6">
+      <div className="space-y-8 animate-enter h-full">
+        <div className="flex items-center justify-between border-b border-zinc-100 pb-8">
           <button
             onClick={() => setView("list")}
-            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black"
+            className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 transition-colors"
           >
-            <ArrowLeft size={14} /> Back to Directory
+            <ArrowLeft size={16} /> Directory
           </button>
 
           <div className="flex items-center gap-3">
@@ -207,17 +208,17 @@ export function ContentPageTemplate<
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto space-y-12 py-12">
-          <div className="flex flex-wrap items-center gap-4">
+        <div className="max-w-4xl mx-auto space-y-16 py-12">
+          <div className="flex flex-wrap items-center gap-6">
             <Badge status={selectedItem.approval_status} />
-            <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.25em]">RECORD-ID-#{selectedItem.id}</span>
+            <span className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.4em]">Ref: #{selectedItem.id}</span>
           </div>
 
-          <h1 className="text-5xl font-black text-black tracking-tighter uppercase leading-tight">
+          <h1 className="text-5xl lg:text-6xl font-black text-zinc-900 tracking-tight uppercase leading-[0.9]">
             {selectedItem.title || "Untitled Record"}
           </h1>
 
-          <div className="pt-12 border-t border-zinc-100 min-h-[400px]">
+          <div className="pt-16 border-t border-zinc-100 min-h-[500px]">
             {renderDetail(selectedItem)}
           </div>
         </div>
@@ -228,33 +229,33 @@ export function ContentPageTemplate<
   if (view === "edit") {
     return (
       <div className="space-y-8 animate-enter">
-        <div className="flex items-center justify-between border-b border-black pb-6">
+        <div className="flex items-center justify-between border-b border-zinc-100 pb-8">
           <button
             onClick={() => setView(editingItem.id ? "detail" : "list")}
-            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black"
+            className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 transition-colors"
           >
-            <ArrowLeft size={14} /> Discard Changes
+            <ArrowLeft size={16} /> Discard
           </button>
           <Button
             onClick={handleSaveInternal}
             isLoading={saving}
-            className="h-10 px-8 text-[11px] font-black tracking-widest"
+            className="h-14 px-10 text-xs font-black tracking-widest rounded-2xl"
           >
-            COMMIT TO SYSTEM
+            SYNC TO SYSTEM
           </Button>
         </div>
 
         <div className="max-w-4xl mx-auto space-y-12 py-12">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-black text-black tracking-tighter uppercase">
-              {editingItem.id ? `Modify ${title.replace(/s$/, "")}` : `Initialize ${title.replace(/s$/, "")}`}
+          <div className="space-y-4">
+            <h1 className="text-5xl font-black text-zinc-900 tracking-tight uppercase">
+              {editingItem.id ? `Modify ${title.replace(/s$/, "")}` : `New ${title.replace(/s$/, "")}`}
             </h1>
-            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-              Protocol: Records created will persist as DRAFT until submitted for review.
+            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] leading-relaxed">
+              Records exist as encrypted drafts until submitted for administrative review.
             </p>
           </div>
 
-          <div className="border border-black p-12 bg-white space-y-8">
+          <div className="bg-white space-y-10">
             {renderEdit(editingItem, setEditingItem, handleSaveInternal)}
           </div>
         </div>

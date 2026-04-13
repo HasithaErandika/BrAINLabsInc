@@ -3,36 +3,35 @@
 
 /* ─── Light-Only Monochrome Design System ─────── */
 @theme {
-  /* Colors: Strictly grayscale */
-  --color-border: #e2e2e2;
-  --color-input: #e2e2e2;
+  /* Colors: Professional Soft Monochrome */
+  --color-border: #e4e4e7; /* zinc-200 */
+  --color-input: #e4e4e7;
   --color-ring: #000000;
   --color-background: #ffffff;
-  --color-foreground: #000000;
+  --color-foreground: #09090b;
 
-  --color-primary: #000000;
+  --color-primary: #09090b;
   --color-primary-foreground: #ffffff;
   --color-secondary: #f4f4f5;
-  --color-secondary-foreground: #000000;
+  --color-secondary-foreground: #09090b;
   --color-muted: #f4f4f5;
   --color-muted-foreground: #71717a;
   --color-accent: #f4f4f5;
-  --color-accent-foreground: #000000;
+  --color-accent-foreground: #09090b;
 
-  /* Use high-contrast gray for destructive to stay monochrome */
-  --color-destructive: #000000; 
+  --color-destructive: #09090b; 
   --color-destructive-foreground: #ffffff;
 
   --color-popover: #ffffff;
-  --color-popover-foreground: #000000;
+  --color-popover-foreground: #09090b;
   --color-card: #ffffff;
-  --color-card-foreground: #000000;
+  --color-card-foreground: #09090b;
 
-  /* Radius: Minimalist sharp/slight rounding */
-  --radius: 0.25rem;
-  --radius-lg: 0.25rem;
-  --radius-md: 0.125rem;
-  --radius-sm: 0rem;
+  /* Radius: Large, Professional Modern Curves */
+  --radius: 1rem;
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+  --radius-sm: 0.5rem;
 }
 
 /* ─── Global Styles ───────────────────────────────────────────── */
@@ -51,61 +50,68 @@ body {
 
 /* ─── Utility Components ───────────────────────────────────────── */
 
-/* Status Pills (Monochrome) */
+/* Status Pills (Rounded) */
 .status-pill {
   display: inline-flex;
   align-items: center;
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-size: 0.7rem;
-  font-weight: 600;
+  border-radius: 9999px; /* Full pill shape */
+  padding: 4px 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.025em;
+  letter-spacing: 0.05em;
 }
-.status-approved { background: #000; color: #fff; }
-.status-pending { background: #f4f4f5; color: #000; border: 1px solid #000; }
-.status-draft { background: #fff; color: #71717a; border: 1px solid #e2e2e2; }
-.status-rejected { background: #000; color: #fff; border: 1px solid #000; text-decoration: line-through; }
+.status-approved { background: #09090b; color: #fff; }
+.status-pending { background: #f4f4f5; color: #09090b; border: 1px solid #e4e4e7; }
+.status-draft { background: #fff; color: #71717a; border: 1px solid #e4e4e7; }
+.status-rejected { background: #f4f4f5; color: #71717a; border: 1px dashed #e4e4e7; text-decoration: line-through; }
 
-/* Dashboard Cards */
+/* Dashboard Cards (Rounded-2xl) */
 .card-monochrome {
   background: #fff;
-  border: 1px solid #e2e2e2;
-  transition: border-color 0.2s;
+  border: 1px solid #e4e4e7;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .card-monochrome:hover {
-  border-color: #000;
+  border-color: #09090b;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  transform: translateY(-2px);
 }
 
-/* Inputs */
+/* Inputs (Rounded-xl) */
 .input-monochrome {
   width: 100%;
-  border: 1px solid #e2e2e2;
-  border-radius: 4px;
-  padding: 8px 12px;
+  border: 1px solid #e4e4e7;
+  border-radius: 0.75rem;
+  padding: 10px 16px;
   font-size: 0.875rem;
   outline: none;
-  transition: border-color 0.2s;
+  background: #fafafa;
+  transition: all 0.2s;
 }
 .input-monochrome:focus {
-  border-color: #000;
+  border-color: #09090b;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgb(9 9 11 / 0.05);
 }
 
-/* Buttons */
+/* Buttons (Rounded-xl) */
 .btn-monochrome {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  padding: 8px 16px;
+  border-radius: 0.75rem;
+  padding: 10px 20px;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s;
   cursor: pointer;
 }
-.btn-primary { background: #000; color: #fff; }
-.btn-primary:hover { background: #333; }
-.btn-secondary { background: #fff; color: #000; border: 1px solid #000; }
+.btn-primary { background: #09090b; color: #fff; }
+.btn-primary:hover { background: #27272a; transform: translateY(-1px); }
+.btn-secondary { background: #fff; color: #09090b; border: 1px solid #e4e4e7; }
 .btn-secondary:hover { background: #f4f4f5; }
 
 /* ─── Animations ────────────────────────────────────────────── */

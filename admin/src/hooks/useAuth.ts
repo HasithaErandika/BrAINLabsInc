@@ -19,6 +19,8 @@ export interface AuthUser {
 interface AuthState {
   token: string | null;
   user: AuthUser | null;
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
   loginWithEmail: (email: string, password: string) => Promise<{ error: string | null }>;
   updateUser: (updates: Partial<AuthUser>) => void;
   logout: () => void;
@@ -33,6 +35,8 @@ export const useAuth = create<AuthState>()(
     (set, get) => ({
       user: null,
       token: null,
+      _hasHydrated: false,
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
 
       loginWithEmail: async (email: string, password: string) => {
         try {
@@ -75,6 +79,9 @@ export const useAuth = create<AuthState>()(
     }),
     {
       name: "brain_labs_auth",
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );

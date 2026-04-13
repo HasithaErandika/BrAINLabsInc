@@ -15,10 +15,10 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = 'btn-monochrome inline-flex items-center justify-center font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variants = {
-    primary: 'bg-black text-white hover:bg-zinc-800',
-    secondary: 'bg-zinc-100 text-black hover:bg-zinc-200',
-    outline: 'border border-black text-black hover:bg-zinc-50',
-    ghost: 'text-black hover:bg-zinc-100',
+    primary: 'bg-zinc-900 text-white hover:bg-zinc-800 shadow-sm hover:shadow-md active:scale-[0.98]',
+    secondary: 'bg-zinc-100 text-zinc-900 hover:bg-zinc-200 active:scale-[0.98]',
+    outline: 'border border-zinc-200 text-zinc-900 hover:bg-zinc-50 active:scale-[0.98]',
+    ghost: 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 active:scale-[0.98]',
   };
 
   return (

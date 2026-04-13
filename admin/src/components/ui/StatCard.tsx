@@ -17,10 +17,10 @@ export const StatCard: React.FC<StatCardProps> = ({
   className = '' 
 }) => {
   return (
-    <div className={`p-6 bg-white border border-zinc-200 rounded-sm hover:border-black transition-all ${className}`}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="p-2 bg-black text-white rounded-sm">
-          <Icon size={16} />
+    <div className={`p-8 bg-white border border-zinc-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group ${className}`}>
+      <div className="flex items-center justify-between mb-6">
+        <div className="p-4 bg-zinc-50 rounded-xl group-hover:bg-zinc-900 group-hover:text-white transition-colors duration-300">
+          <Icon size={24} />
         </div>
         {trend && (
           <div className="flex items-center gap-1.5 px-2 py-0.5 bg-zinc-100 border border-zinc-200 rounded-sm">
