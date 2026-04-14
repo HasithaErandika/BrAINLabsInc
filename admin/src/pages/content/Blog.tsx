@@ -59,7 +59,7 @@ export default function BlogPage() {
   return (
     <ContentPageTemplate<Blog>
       title="Articles"
-      subtitle={`${items.length} records indexed in the central registry.`}
+      subtitle={`${items.length} article${items.length !== 1 ? "s" : ""}.`}
       icon={BookOpen}
       items={items}
       loading={loading}
@@ -81,7 +81,7 @@ export default function BlogPage() {
         <div 
           key={item.id} 
           onClick={onClick}
-          className="group border border-zinc-200 p-6 hover:border-black transition-all cursor-pointer flex flex-col gap-6 bg-white"
+          className="group bg-white border border-zinc-200 hover:border-zinc-400 hover:shadow-sm rounded-xl p-5 cursor-pointer flex flex-col gap-4 transition-all"
         >
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -105,7 +105,7 @@ export default function BlogPage() {
 
           <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
             <span className="text-[10px] font-black text-black uppercase tracking-[0.2em] flex items-center gap-2">
-              <ExternalLink size={12} /> Access Protocol
+              <ExternalLink size={12} /> Read article
             </span>
             <ArrowRight size={14} className="text-zinc-300 group-hover:text-black group-hover:translate-x-1 transition-all" />
           </div>
@@ -127,19 +127,19 @@ export default function BlogPage() {
       )}
       renderEdit={(item, setItem) => (
         <div className="space-y-10">
-          <Input 
-            label="Research Title" 
-            placeholder="ENTER PROTOCOL NAME..."
+          <Input
+            label="Title"
+            placeholder="Enter article title..."
             value={item.title || ""} 
             onChange={e => setItem({ ...item, title: e.target.value })}
           />
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-tight text-zinc-600">
-              Brief Description
+              Description
             </label>
             <textarea
-              placeholder="SUMMARY OF FINDINGS..."
+              placeholder="Brief summary of the article..."
               value={item.description || ""}
               onChange={e => setItem({ ...item, description: e.target.value })}
               className="input-monochrome min-h-[100px] py-4"
@@ -148,11 +148,11 @@ export default function BlogPage() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-tight text-zinc-600">
-              Core Content (Markdown Enabled)
+              Content (Markdown supported)
             </label>
             <textarea
               className="input-monochrome min-h-[400px] py-6 font-mono text-sm"
-              placeholder="# PRIMARY DATA..."
+              placeholder="# Start writing..."
               value={item.content || ""}
               onChange={e => setItem({ ...item, content: e.target.value })}
             />

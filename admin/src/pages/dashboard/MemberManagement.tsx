@@ -66,7 +66,7 @@ export default function MemberManagement() {
             onClick={() => setView("list")}
             className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-colors"
           >
-            <ArrowLeft size={14} /> Back to Directory
+            <ArrowLeft size={14} /> Back to Members
           </button>
 
           {isAdmin() && (
@@ -77,7 +77,7 @@ export default function MemberManagement() {
                   isLoading={updatingId === selectedMember.id}
                   className="px-6 h-10 text-[10px] tracking-[0.2em] font-black"
                 >
-                  AUTHORIZE
+                  Approve
                 </Button>
               )}
               {selectedMember.approval_status === "APPROVED" && (
@@ -87,7 +87,7 @@ export default function MemberManagement() {
                   isLoading={updatingId === selectedMember.id}
                   className="px-6 h-10 text-[10px] tracking-[0.2em] font-black"
                 >
-                  REVOKE ACCESS
+                  Revoke Access
                 </Button>
               )}
             </div>
@@ -104,7 +104,7 @@ export default function MemberManagement() {
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-2">
                   <Badge status={selectedMember.approval_status} />
-                  <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.25em]">PERS-ID-#{selectedMember.id}</span>
+                  <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.25em]">#{selectedMember.id}</span>
                 </div>
                 <h1 className="text-5xl font-black text-black tracking-tighter uppercase leading-none">
                   {selectedMember.first_name} {selectedMember.second_name}
@@ -138,10 +138,10 @@ export default function MemberManagement() {
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-zinc-400">
             <ShieldCheck size={14} />
-            <span className="text-[10px] font-black uppercase tracking-[0.25em]">Security & Oversight</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.25em]">Admin</span>
           </div>
-          <h1 className="text-4xl font-black text-black tracking-tighter uppercase">Personnel Directory</h1>
-          <p className="text-xs font-bold text-zinc-500 uppercase tracking-tight">Manage laboratory credentials and access levels.</p>
+          <h1 className="text-4xl font-black text-black tracking-tighter uppercase">Members</h1>
+          <p className="text-xs font-bold text-zinc-500 uppercase tracking-tight">Approve registrations and manage member access.</p>
         </div>
       </div>
 
@@ -153,11 +153,11 @@ export default function MemberManagement() {
 
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-4">
-          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-300">Active Registry ({filtered.length} members found)</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-300">{filtered.length} member{filtered.length !== 1 ? "s" : ""}</p>
           <div className="relative max-w-sm w-full">
             <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
             <Input
-              placeholder="SEARCH BY IDENTITY OR EMAIL..."
+              placeholder="Search by name or email..."
               className="pl-10 h-10 text-[10px]"
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -169,10 +169,10 @@ export default function MemberManagement() {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-200">
-                <th className="px-6 py-4 text-[10px] font-black text-black uppercase tracking-widest">Personnel</th>
-                <th className="px-6 py-4 text-[10px] font-black text-black uppercase tracking-widest">Access Role</th>
-                <th className="px-6 py-4 text-[10px] font-black text-black uppercase tracking-widest">Authorization</th>
-                <th className="px-6 py-4 text-[10px] font-black text-black uppercase tracking-widest text-right">Reference</th>
+                <th className="px-6 py-4 text-[10px] font-black text-black uppercase tracking-widest">Member</th>
+                <th className="px-6 py-4 text-[10px] font-black text-black uppercase tracking-widest">Role</th>
+                <th className="px-6 py-4 text-[10px] font-black text-black uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-[10px] font-black text-black uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
@@ -205,13 +205,13 @@ export default function MemberManagement() {
                           isLoading={updatingId === m.id}
                           className="h-8 px-3 text-[9px] tracking-widest"
                         >
-                          VERIFY
+                          Approve
                         </Button>
                       )}
                       <button
                         onClick={() => { setSelectedId(m.id); setView("detail"); }}
                         className="p-2 text-zinc-400 hover:text-black hover:bg-white border hover:border-black transition-all"
-                        title="View Protocol"
+                        title="View details"
                       >
                         <Eye size={16} />
                       </button>
@@ -224,7 +224,7 @@ export default function MemberManagement() {
 
           {filtered.length === 0 && (
             <div className="py-24 text-center bg-zinc-50/50">
-              <p className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.3em]">No Personnel Located</p>
+              <p className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.3em]">No members found</p>
             </div>
           )}
         </div>

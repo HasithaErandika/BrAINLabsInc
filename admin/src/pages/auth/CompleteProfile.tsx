@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { api } from "../../lib/api";
+import { api } from "../../api";
 import { UserPlus, ArrowRight, Loader2, Info, GraduationCap, MapPin, Briefcase } from "lucide-react";
 import { FormField, FormInput, FormTextArea } from "../../components/shared/FormElements";
 

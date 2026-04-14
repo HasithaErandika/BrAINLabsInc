@@ -60,7 +60,7 @@ export default function EventsPage() {
   return (
     <ContentPageTemplate<Event>
       title="Events"
-      subtitle={`${items.length} institutional engagements recorded.`}
+      subtitle={`${items.length} event${items.length !== 1 ? "s" : ""} recorded.`}
       icon={CalendarDays}
       items={items}
       loading={loading}
@@ -84,7 +84,7 @@ export default function EventsPage() {
           <div 
             key={item.id} 
             onClick={onClick} 
-            className="group border border-zinc-200 p-6 hover:border-black transition-all cursor-pointer flex flex-col gap-6 bg-white"
+            className="group bg-white border border-zinc-200 hover:border-zinc-400 hover:shadow-sm rounded-xl p-5 cursor-pointer flex flex-col gap-4 transition-all"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -122,14 +122,14 @@ export default function EventsPage() {
               <div className="p-8 border border-zinc-200 bg-white space-y-4">
                 <div className="flex items-center gap-2 text-zinc-400">
                   <MapPin size={16} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Operation Location</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Location</span>
                 </div>
                 <p className="text-lg font-black text-black uppercase tracking-tight">{item.premises}</p>
               </div>
               <div className="p-8 border border-zinc-200 bg-white space-y-4">
                 <div className="flex items-center gap-2 text-zinc-400">
                   <Clock size={16} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Protocol Time</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Time</span>
                 </div>
                 <p className="text-lg font-black text-black uppercase tracking-tight">
                   {date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
@@ -138,7 +138,7 @@ export default function EventsPage() {
               <div className="p-8 border border-zinc-200 bg-white space-y-4">
                 <div className="flex items-center gap-2 text-zinc-400">
                   <Users size={16} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Authority / Host</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Host</span>
                 </div>
                 <p className="text-lg font-black text-black uppercase tracking-tight">{item.host}</p>
               </div>
@@ -147,7 +147,7 @@ export default function EventsPage() {
             {item.description && (
               <div className="space-y-6">
                 <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 flex items-center gap-2">
-                  <Info size={14} /> Scope of Engagement
+                  <Info size={14} /> Description
                 </h4>
                 <p className="text-sm text-black font-bold uppercase tracking-tight leading-loose">
                   {item.description}
@@ -159,23 +159,23 @@ export default function EventsPage() {
       }}
       renderEdit={(item, setItem) => (
         <div className="space-y-10">
-          <Input 
-            label="Engagement Name" 
-            placeholder="ENTER EVENT TITLE..." 
+          <Input
+            label="Event Title"
+            placeholder="Enter event title..."
             value={item.title ?? ""} 
             onChange={e => setItem({...item, title: e.target.value})} 
           />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Input 
-              label="Engagement Location" 
-              placeholder="CAMPUS / PLATFORM / HQ..." 
+            <Input
+              label="Location"
+              placeholder="Campus / Platform / Online..."
               value={item.premises ?? ""} 
               onChange={e => setItem({...item, premises: e.target.value})} 
             />
-            <Input 
-              label="Coordinating Authority" 
-              placeholder="ORGANISER NAME..." 
+            <Input
+              label="Host / Organiser"
+              placeholder="Organiser name..."
               value={item.host ?? ""} 
               onChange={e => setItem({...item, host: e.target.value})} 
             />
@@ -193,7 +193,7 @@ export default function EventsPage() {
             </label>
             <textarea 
               className="input-monochrome min-h-[160px] py-4" 
-              placeholder="OBJECTIVES AND LOGISTICS..." 
+              placeholder="Describe the event..."
               value={item.description ?? ""} 
               onChange={e => setItem({...item, description: e.target.value})} 
             />

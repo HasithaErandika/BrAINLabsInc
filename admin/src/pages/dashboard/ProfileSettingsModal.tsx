@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { X, Loader2, User, Briefcase, Mail, ImageIcon, Save, CheckCircle2 } from "lucide-react";
-import { api } from "../../lib/api";
+import { api } from "../../api";
 import { useAuth } from "../../hooks/useAuth";
 import { cn } from "../../lib/utils";
 

@@ -1,9 +1,8 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Plus, Search, ArrowLeft } from "lucide-react";
+import { Plus, Search, ArrowLeft, SlidersHorizontal } from "lucide-react";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Input } from "../ui/Input";
 
 export type ContentPageView = "list" | "detail" | "edit";
 
@@ -15,18 +14,13 @@ interface ContentPageTemplateProps<T> {
   loading: boolean;
   isAdmin: boolean;
   isResearcher?: boolean;
-
   renderListItem: (item: T, onClick: () => void) => ReactNode;
   searchFields: (item: T) => string[];
   filterOptions?: { label: string; value: string }[];
-
   renderDetail: (item: T) => ReactNode;
-  onEdit?: (item: T) => void;
-  onDelete?: (item: T) => void;
   onSubmitForReview?: (item: T) => void;
   onReview?: (item: T, status: 'PENDING_ADMIN' | 'REJECTED') => void;
   onToggleStatus?: (item: T) => void;
-
   renderEdit: (item: Partial<T>, setItem: (p: Partial<T>) => void, onSave: () => void) => ReactNode;
   emptyItem: Partial<T>;
   onSave: (item: Partial<T>) => Promise<void>;
@@ -35,23 +29,10 @@ interface ContentPageTemplateProps<T> {
 export function ContentPageTemplate<
   T extends { id?: number | string; approval_status?: any; title?: string }
 >({
-  title,
-  subtitle,
-  icon: Icon,
-  items,
-  loading,
-  isAdmin,
-  isResearcher,
-  renderListItem,
-  searchFields,
-  filterOptions,
-  renderDetail,
-  renderEdit,
-  emptyItem,
-  onSave,
-  onSubmitForReview,
-  onReview,
-  onToggleStatus,
+  title, subtitle, icon: Icon, items, loading, isAdmin, isResearcher,
+  renderListItem, searchFields, filterOptions,
+  renderDetail, renderEdit, emptyItem, onSave,
+  onSubmitForReview, onReview, onToggleStatus,
 }: ContentPageTemplateProps<T>) {
   const [view, setView] = useState<ContentPageView>("list");
   const [selectedId, setSelectedId] = useState<string | number | null>(null);
@@ -62,75 +43,64 @@ export function ContentPageTemplate<
 
   const selectedItem = items.find(i => i.id === selectedId) || null;
 
-  const handleCreate = () => {
-    setEditingItem(emptyItem);
-    setView("edit");
-  };
-
-  const handleEdit = (item: T) => {
-    setEditingItem({ ...item });
-    setView("edit");
-  };
+  const handleCreate = () => { setEditingItem(emptyItem); setView("edit"); };
+  const handleEdit = (item: T) => { setEditingItem({ ...item }); setView("edit"); };
 
   const handleSaveInternal = async () => {
     setSaving(true);
-    try {
-      await onSave(editingItem);
-      setView("list");
-      setSelectedId(null);
-    } catch (err) {
-      console.error("Save failed:", err);
-    } finally {
-      setSaving(false);
-    }
+    try { await onSave(editingItem); setView("list"); setSelectedId(null); }
+    catch (err) { console.error("Save failed:", err); }
+    finally { setSaving(false); }
   };
 
   const filteredItems = items.filter(item => {
     const q = search.toLowerCase();
-    const values = searchFields(item).map(s => (s ?? "").toLowerCase());
-    const matchesSearch = !q || values.some(v => v.includes(q));
+    const matchesSearch = !q || searchFields(item).some(s => (s ?? "").toLowerCase().includes(q));
     const matchesFilter = filter === "ALL" || item.approval_status === filter;
     return matchesSearch && matchesFilter;
   });
 
+  // ── List view ─────────────────────────────────────────────────────────────────
   if (view === "list") {
     return (
-      <div className="space-y-12 animate-enter">
-        <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-zinc-100 pb-10">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-start justify-between">
           <div>
-            <div className="flex items-center gap-2 text-zinc-400 mb-3">
-              <Icon size={16} />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">{title} System</span>
+            <div className="flex items-center gap-2 mb-1">
+              <Icon size={14} className="text-zinc-400" />
+              <span className="text-xs font-medium text-zinc-400 uppercase tracking-widest">{title}</span>
             </div>
-            <h1 className="text-4xl lg:text-5xl font-black text-zinc-900 tracking-tight uppercase">{title}</h1>
-            <p className="text-sm font-medium text-zinc-500 mt-2">{subtitle}</p>
+            <h1 className="text-2xl font-bold text-zinc-900">{title}</h1>
+            <p className="text-sm text-zinc-500 mt-0.5">{subtitle}</p>
           </div>
-          {!isAdmin && (
-            <Button onClick={handleCreate} className="h-14 px-8 text-xs font-bold rounded-2xl shadow-lg shadow-zinc-100">
-              <Plus size={18} className="mr-2" /> New Entry
-            </Button>
-          )}
+          <Button onClick={handleCreate} className="shrink-0 h-9 px-4 text-xs font-semibold">
+            <Plus size={13} className="mr-1.5" /> New
+          </Button>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-6 items-center justify-between">
+        {/* Search + filter */}
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1 max-w-sm">
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-            <Input
-              placeholder={`SEARCH ${title.toUpperCase()}...`}
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder={`Search ${title.toLowerCase()}...`}
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-10 h-10 text-[10px]"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-400 transition-all"
             />
           </div>
-
-          {filterOptions && (
-            <div className="flex bg-zinc-100/50 p-1.5 rounded-2xl border border-zinc-100">
+          {filterOptions && filterOptions.length > 0 && (
+            <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-lg">
               {filterOptions.map(opt => (
                 <button
                   key={opt.value}
                   onClick={() => setFilter(opt.value)}
-                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                    filter === opt.value ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-400 hover:text-zinc-600"
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    filter === opt.value
+                      ? "bg-white text-zinc-900 shadow-sm"
+                      : "text-zinc-500 hover:text-zinc-700"
                   }`}
                 >
                   {opt.label}
@@ -140,22 +110,25 @@ export function ContentPageTemplate<
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {loading ? (
-            <div className="col-span-full py-40 text-center flex flex-col items-center gap-4">
-              <div className="w-12 h-12 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin"></div>
-              <p className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.4em]">Synchronizing Records</p>
-            </div>
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-40 bg-zinc-100 rounded-xl animate-pulse" />
+            ))
           ) : filteredItems.length === 0 ? (
-            <div className="col-span-full py-40 text-center bg-zinc-50 rounded-[2rem] border border-dashed border-zinc-200">
-              <p className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.4em]">No Records Found</p>
+            <div className="col-span-full py-20 text-center flex flex-col items-center gap-2">
+              <SlidersHorizontal size={24} className="text-zinc-300" />
+              <p className="text-sm font-medium text-zinc-400">No {title.toLowerCase()} found</p>
+              {search && (
+                <button onClick={() => setSearch("")} className="text-xs text-zinc-500 underline">
+                  Clear search
+                </button>
+              )}
             </div>
           ) : (
             filteredItems.map(item =>
-              renderListItem(item, () => {
-                setSelectedId(item.id!);
-                setView("detail");
-              })
+              renderListItem(item, () => { setSelectedId(item.id!); setView("detail"); })
             )
           )}
         </div>
@@ -163,62 +136,65 @@ export function ContentPageTemplate<
     );
   }
 
+  // ── Detail view ───────────────────────────────────────────────────────────────
   if (view === "detail" && selectedItem) {
+    const status = selectedItem.approval_status;
     return (
-      <div className="space-y-8 animate-enter h-full">
-        <div className="flex items-center justify-between border-b border-zinc-100 pb-8">
+      <div className="space-y-6">
+        {/* Action bar */}
+        <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
           <button
             onClick={() => setView("list")}
-            className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 transition-colors"
+            className="flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
           >
-            <ArrowLeft size={16} /> Directory
+            <ArrowLeft size={15} /> Back to {title}
           </button>
-
-          <div className="flex items-center gap-3">
-            {/* Workflow Actions */}
-            {!isAdmin && selectedItem.approval_status === "DRAFT" && (
+          <div className="flex items-center gap-2">
+            {status === "DRAFT" && (
+              <Button variant="outline" onClick={() => handleEdit(selectedItem)} className="h-8 px-3 text-xs">
+                Edit
+              </Button>
+            )}
+            {status === "DRAFT" && onSubmitForReview && (
+              <Button onClick={() => onSubmitForReview(selectedItem)} className="h-8 px-3 text-xs">
+                Submit for review
+              </Button>
+            )}
+            {isResearcher && status === "PENDING_RESEARCHER" && onReview && (
               <>
-                <Button variant="outline" onClick={() => handleEdit(selectedItem)} className="h-10 px-6 text-[10px] font-black">
-                  EDIT DRAFT
+                <Button variant="outline" onClick={() => onReview(selectedItem, 'REJECTED')}
+                  className="h-8 px-3 text-xs border-red-200 text-red-600 hover:bg-red-50">
+                  Reject
                 </Button>
-                {onSubmitForReview && (
-                  <Button onClick={() => onSubmitForReview(selectedItem)} className="h-10 px-6 text-[10px] font-black">
-                    SUBMIT FOR REVIEW
-                  </Button>
-                )}
+                <Button onClick={() => onReview(selectedItem, 'PENDING_ADMIN')} className="h-8 px-3 text-xs">
+                  Forward to admin
+                </Button>
               </>
             )}
-            
-            {isResearcher && selectedItem.approval_status === "PENDING_RESEARCHER" && onReview && (
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => onReview(selectedItem, 'REJECTED')} className="h-10 px-6 text-[10px] font-black">
-                  REJECT
-                </Button>
-                <Button onClick={() => onReview(selectedItem, 'PENDING_ADMIN')} className="h-10 px-6 text-[10px] font-black">
-                  FORWARD TO ADMIN
-                </Button>
-              </div>
-            )}
-
             {isAdmin && onToggleStatus && (
-              <Button onClick={() => onToggleStatus(selectedItem)} className="h-10 px-6 text-[10px] font-black">
-                {selectedItem.approval_status === "APPROVED" ? "REVOKE ACCESS" : "AUTHORIZE"}
-              </Button>
+              status === "APPROVED" ? (
+                <Button variant="outline" onClick={() => onToggleStatus(selectedItem)}
+                  className="h-8 px-3 text-xs border-red-200 text-red-600 hover:bg-red-50">
+                  Revoke
+                </Button>
+              ) : status === "PENDING_ADMIN" ? (
+                <Button onClick={() => onToggleStatus(selectedItem)} className="h-8 px-3 text-xs">
+                  Approve
+                </Button>
+              ) : null
             )}
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto space-y-16 py-12">
-          <div className="flex flex-wrap items-center gap-6">
+        <div className="max-w-3xl mx-auto space-y-6 pb-16">
+          <div className="flex items-center gap-3">
             <Badge status={selectedItem.approval_status} />
-            <span className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.4em]">Ref: #{selectedItem.id}</span>
+            <span className="text-xs text-zinc-400">#{selectedItem.id}</span>
           </div>
-
-          <h1 className="text-5xl lg:text-6xl font-black text-zinc-900 tracking-tight uppercase leading-[0.9]">
-            {selectedItem.title || "Untitled Record"}
+          <h1 className="text-3xl font-bold text-zinc-900 leading-tight">
+            {selectedItem.title || "Untitled"}
           </h1>
-
-          <div className="pt-16 border-t border-zinc-100 min-h-[500px]">
+          <div className="border-t border-zinc-100 pt-6">
             {renderDetail(selectedItem)}
           </div>
         </div>
@@ -226,36 +202,33 @@ export function ContentPageTemplate<
     );
   }
 
+  // ── Edit view ─────────────────────────────────────────────────────────────────
   if (view === "edit") {
+    const isNew = !editingItem.id;
     return (
-      <div className="space-y-8 animate-enter">
-        <div className="flex items-center justify-between border-b border-zinc-100 pb-8">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
           <button
             onClick={() => setView(editingItem.id ? "detail" : "list")}
-            className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 transition-colors"
+            className="flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
           >
-            <ArrowLeft size={16} /> Discard
+            <ArrowLeft size={15} /> Cancel
           </button>
-          <Button
-            onClick={handleSaveInternal}
-            isLoading={saving}
-            className="h-14 px-10 text-xs font-black tracking-widest rounded-2xl"
-          >
-            SYNC TO SYSTEM
+          <Button onClick={handleSaveInternal} isLoading={saving} className="h-9 px-5 text-xs font-semibold">
+            {isNew ? "Save draft" : "Save changes"}
           </Button>
         </div>
 
-        <div className="max-w-4xl mx-auto space-y-12 py-12">
-          <div className="space-y-4">
-            <h1 className="text-5xl font-black text-zinc-900 tracking-tight uppercase">
-              {editingItem.id ? `Modify ${title.replace(/s$/, "")}` : `New ${title.replace(/s$/, "")}`}
+        <div className="max-w-2xl mx-auto space-y-6 pb-16">
+          <div>
+            <h1 className="text-2xl font-bold text-zinc-900">
+              {isNew ? `New ${title.replace(/s$/, "")}` : `Edit ${title.replace(/s$/, "")}`}
             </h1>
-            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] leading-relaxed">
-              Records exist as encrypted drafts until submitted for administrative review.
+            <p className="text-sm text-zinc-500 mt-1">
+              {isNew ? "Saved as a draft. Submit for review when ready." : "Changes reset approval status to draft."}
             </p>
           </div>
-
-          <div className="bg-white space-y-10">
+          <div className="space-y-5">
             {renderEdit(editingItem, setEditingItem, handleSaveInternal)}
           </div>
         </div>
@@ -263,9 +236,5 @@ export function ContentPageTemplate<
     );
   }
 
-  return (
-    <div className="py-20 text-center uppercase text-[10px] font-black tracking-[0.5em] text-zinc-300">
-      Loading System View...
-    </div>
-  );
+  return null;
 }

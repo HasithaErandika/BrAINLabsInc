@@ -88,7 +88,7 @@ export default function PublicationsPage() {
   return (
     <ContentPageTemplate<Publication>
       title="Publications"
-      subtitle={`${items.length} peer-reviewed assets indexed.`}
+      subtitle={`${items.length} publication${items.length !== 1 ? "s" : ""}.`}
       icon={BookOpen}
       items={items}
       loading={loading}
@@ -110,34 +110,32 @@ export default function PublicationsPage() {
         <div
           key={item.id}
           onClick={onClick}
-          className="group border border-zinc-200 p-6 hover:border-black transition-all cursor-pointer flex flex-col gap-6 bg-white"
+          className="group bg-white border border-zinc-200 hover:border-zinc-400 hover:shadow-sm rounded-xl p-5 cursor-pointer flex flex-col gap-4 transition-all"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-black text-white shrink-0">
-                <BookOpen size={14} />
+              <div className="w-7 h-7 bg-zinc-100 rounded-lg flex items-center justify-center shrink-0">
+                <BookOpen size={13} className="text-zinc-600" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                {item.type ? TYPE_LABELS[item.type] : "Scholarly Asset"}
+              <span className="text-xs font-medium text-zinc-500">
+                {item.type ? TYPE_LABELS[item.type] : "Publication"}
               </span>
             </div>
             <Badge status={item.approval_status} />
           </div>
 
-          <div className="space-y-3">
-            <h3 className="text-lg font-black text-black uppercase tracking-tight leading-tight line-clamp-2">{item.title}</h3>
+          <div className="space-y-1.5">
+            <h3 className="text-sm font-semibold text-zinc-900 leading-snug line-clamp-2">{item.title}</h3>
             {item.authors && (
-              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-tight line-clamp-1 italic">
-                {item.authors}
-              </p>
+              <p className="text-xs text-zinc-400 line-clamp-1">{item.authors}</p>
             )}
           </div>
 
-          <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
-            <span className="text-[10px] font-black text-black uppercase tracking-[0.2em]">
-              ISO-{item.publication_year ?? new Date(item.created_at).getFullYear()}
+          <div className="pt-3 border-t border-zinc-100 flex items-center justify-between">
+            <span className="text-xs text-zinc-500">
+              {item.publication_year ?? new Date(item.created_at).getFullYear()}
             </span>
-            <ArrowRight size={14} className="text-zinc-300 group-hover:text-black group-hover:translate-x-1 transition-all" />
+            <ArrowRight size={13} className="text-zinc-300 group-hover:text-zinc-600 group-hover:translate-x-0.5 transition-all" />
           </div>
         </div>
       )}
@@ -151,14 +149,14 @@ export default function PublicationsPage() {
               <div className="p-8 border border-zinc-200 bg-white space-y-4">
                 <div className="flex items-center gap-2 text-zinc-400">
                   <Bookmark size={16} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Classification</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Type</span>
                 </div>
                 <p className="text-sm font-black text-black uppercase">{type ? TYPE_LABELS[type] : "—"}</p>
               </div>
               <div className="p-8 border border-zinc-200 bg-white space-y-4">
                 <div className="flex items-center gap-2 text-zinc-400">
                   <Calendar size={16} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Release Year</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Year</span>
                 </div>
                 <p className="text-sm font-black text-black">
                   {item.publication_year ?? new Date(item.created_at).getFullYear()}
@@ -167,7 +165,7 @@ export default function PublicationsPage() {
               <div className="p-8 border border-zinc-200 bg-white space-y-4 lg:col-span-2">
                 <div className="flex items-center gap-2 text-zinc-400">
                   <Users size={16} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Authorship Ledger</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Authors</span>
                 </div>
                 <p className="text-sm font-black text-black uppercase line-clamp-2">{item.authors || "—"}</p>
               </div>
@@ -208,7 +206,7 @@ export default function PublicationsPage() {
                   variant="outline"
                   className="h-12 px-8 text-[11px] font-black tracking-widest uppercase"
                 >
-                  <ExternalLink size={16} className="mr-2" /> Access External Repository
+                  <ExternalLink size={16} className="mr-2" /> View external link
                 </Button>
               </div>
             )}
@@ -226,22 +224,22 @@ export default function PublicationsPage() {
         return (
           <div className="space-y-10">
             <Input
-              label="Asset Title"
-              placeholder="ENTER PUBLICATION NAME..."
+              label="Title"
+              placeholder="Enter publication title..."
               value={item.title ?? ""}
               onChange={e => setItem({ ...item, title: e.target.value })}
             />
 
             <Input
-              label="Authorship List"
-              placeholder="NAMES, COMMA-SEPARATED..."
+              label="Authors"
+              placeholder="Names, comma-separated..."
               value={item.authors ?? ""}
               onChange={e => setItem({ ...item, authors: e.target.value })}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Input
-                label="Fiscal/Release Year"
+                label="Publication Year"
                 type="number"
                 placeholder={String(new Date().getFullYear())}
                 value={item.publication_year ?? ""}
@@ -250,14 +248,14 @@ export default function PublicationsPage() {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold uppercase tracking-tight text-zinc-600">
-                  Scholarly Class
+                  Publication Type
                 </label>
                 <select
                   value={item.type ?? ""}
                   onChange={e => setItem({ ...item, type: e.target.value as PublicationType })}
                   className="input-monochrome focus:ring-1 focus:ring-black appearance-none cursor-pointer"
                 >
-                  <option value="">-- SELECT CLASS --</option>
+                  <option value="">-- Select type --</option>
                   <option value="ARTICLE">RESEARCH ARTICLE</option>
                   <option value="CONFERENCE">CONFERENCE PAPER</option>
                   <option value="BOOK">ACADEMIC BOOK</option>
@@ -270,13 +268,13 @@ export default function PublicationsPage() {
               <div className="pt-10 border-t border-zinc-100 space-y-10 animate-enter">
                 <Input
                   label={type === "ARTICLE" ? "DOI" : type === "BOOK" ? "ISBN" : type === "JOURNAL" ? "ISSN" : "Paper ID"}
-                  placeholder="IDENTIFIER PROTOCOL..."
+                  placeholder="Enter identifier..."
                   value={(type === "ARTICLE" ? subtypeData.doi : type === "BOOK" ? subtypeData.isbn : type === "JOURNAL" ? subtypeData.issn : subtypeData.paper_id) ?? ""}
                   onChange={e => setSubtype({ [type === "ARTICLE" ? 'doi' : type === "BOOK" ? 'isbn' : type === "JOURNAL" ? 'issn' : 'paper_id']: e.target.value })}
                 />
 
                 <Input
-                  label="Network Resource Location (URL)"
+                  label="URL / Link"
                   placeholder="https://doi.org/..."
                   value={subtypeData.link ?? ""}
                   onChange={e => setSubtype({ link: e.target.value })}
@@ -284,11 +282,11 @@ export default function PublicationsPage() {
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold uppercase tracking-tight text-zinc-600">
-                    Publication abstract / details
+                    Abstract / Description
                   </label>
                   <textarea
                     className="input-monochrome min-h-[160px] py-4"
-                    placeholder="SYNOPSIS..."
+                    placeholder="Brief abstract or description..."
                     value={subtypeData.description ?? ""}
                     onChange={e => setSubtype({ description: e.target.value })}
                   />

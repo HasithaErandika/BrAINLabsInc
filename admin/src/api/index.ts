@@ -1,30 +1,39 @@
-// src/api/index.ts — Refactored API client for BrAIN Labs
+// src/api/index.ts
 
 import axios from 'axios';
-import type { 
-  Profile, Blog, Tutorial, Project, Event, Grant, Publication, 
-  BaseMember, EducationalBackground, OngoingResearch 
+import type {
+  Profile, Blog, Tutorial, Project, Event, Grant, Publication,
+  BaseMember, EducationalBackground, OngoingResearch
 } from '../types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Interceptor to inject Bearer token
+// ── Single source of truth for the auth token ───────────────────────────────
+// useAuth.ts calls setAuthToken on login / logout / rehydration.
+// The interceptor below always reads this in-memory value so there is no
+// second localStorage key that can fall out of sync.
+
+let _authToken: string | null = null;
+
+export function setAuthToken(token: string | null) {
+  _authToken = token;
+}
+
+// ── Request interceptor — attach Bearer token ────────────────────────────────
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('brain_labs_token');
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (_authToken && config.headers) {
+    config.headers.Authorization = `Bearer ${_authToken}`;
   }
   return config;
 });
 
-let is401Handling = false;
+// ── Response interceptor — handle session expiry ─────────────────────────────
+let _handling401 = false;
 
 apiClient.interceptors.response.use(
   (response) => response,
@@ -32,20 +41,19 @@ apiClient.interceptors.response.use(
     const url = error.config?.url ?? '';
     const isAuthRoute = url.includes('/auth/login') || url.includes('/auth/register');
 
-    if (error.response?.status === 401 && !isAuthRoute && !is401Handling) {
-      is401Handling = true;
-      localStorage.removeItem('brain_labs_token');
-      localStorage.removeItem('brain_labs_auth');
+    if (error.response?.status === 401 && !isAuthRoute && !_handling401) {
+      _handling401 = true;
       window.dispatchEvent(new CustomEvent('brain:session-expired'));
-      setTimeout(() => { is401Handling = false; }, 5_000);
+      setTimeout(() => { _handling401 = false; }, 5_000);
     }
     return Promise.reject(error);
   }
 );
 
-// Helper for standard data extraction
+// ── Data helper ───────────────────────────────────────────────────────────────
 const data = <T>(res: { data: T }) => res.data;
 
+// ── API surface ───────────────────────────────────────────────────────────────
 export const api = {
   me: {
     get: () => apiClient.get<Profile>('/me').then(data),
@@ -66,10 +74,9 @@ export const api = {
     rejectContent: (table: string, id: number) => apiClient.patch(`/admin/content/${table}/${id}/reject`).then(data),
   },
   content: {
-    // Generic submission and review (Workflow Fix)
     submit: (table: string, id: number) => apiClient.patch(`/content/${table}/${id}/submit`).then(data),
-    review: (table: string, id: number, status: string) => apiClient.patch(`/content/${table}/${id}/review`, { status }).then(data),
-    getResearcherReviews: () => apiClient.get<Record<string, any[]>>('/researcher/reviews').then(data),
+    review: (table: string, id: number, status: 'PENDING_ADMIN' | 'REJECTED') => apiClient.patch(`/content/${table}/${id}/review`, { status }).then(data),
+    getResearcherReviews: () => apiClient.get<Record<string, any[]>>('/content/researcher/reviews').then(data),
   },
   blogs: {
     list: () => apiClient.get<Blog[]>('/blogs').then(data),
@@ -113,5 +120,5 @@ export const api = {
     create: (payload: Partial<Publication>) => apiClient.post<Publication>('/publications', payload).then(data),
     update: (id: number, payload: Partial<Publication>) => apiClient.put<Publication>(`/publications/${id}`, payload).then(data),
     delete: (id: number) => apiClient.delete(`/publications/${id}`).then(data),
-  }
+  },
 };

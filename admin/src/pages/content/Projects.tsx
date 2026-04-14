@@ -59,7 +59,7 @@ export default function ProjectsPage() {
   return (
     <ContentPageTemplate<Project>
       title="Projects"
-      subtitle={`${items.length} development initiatives logged.`}
+      subtitle={`${items.length} project${items.length !== 1 ? "s" : ""}.`}
       icon={FlaskConical}
       items={items}
       loading={loading}
@@ -81,14 +81,14 @@ export default function ProjectsPage() {
         <div
           key={item.id}
           onClick={onClick}
-          className="group border border-zinc-200 p-6 hover:border-black transition-all cursor-pointer flex flex-col gap-6 bg-white"
+          className="group bg-white border border-zinc-200 hover:border-zinc-400 hover:shadow-sm rounded-xl p-5 cursor-pointer flex flex-col gap-4 transition-all"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-black text-white shrink-0">
                 <FlaskConical size={14} />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Initiative</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Project</span>
             </div>
             <Badge status={item.approval_status} />
           </div>
@@ -104,7 +104,7 @@ export default function ProjectsPage() {
 
           <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
             <span className="text-[10px] font-black text-black uppercase tracking-[0.2em] flex items-center gap-2">
-              <ExternalLink size={12} /> View Proposal
+              <ExternalLink size={12} /> View project
             </span>
             <ArrowRight size={14} className="text-zinc-300 group-hover:text-black group-hover:translate-x-1 transition-all" />
           </div>
@@ -116,14 +116,14 @@ export default function ProjectsPage() {
             <div className="p-8 border border-zinc-200 bg-white space-y-4">
               <div className="flex items-center gap-2 text-zinc-400">
                 <ShieldCheck size={16} />
-                <span className="text-[10px] font-black uppercase tracking-widest">Verification Status</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">Status</span>
               </div>
               <Badge status={item.approval_status} />
             </div>
             <div className="p-8 border border-zinc-200 bg-white space-y-4">
               <div className="flex items-center gap-2 text-zinc-400">
                 <Info size={16} />
-                <span className="text-[10px] font-black uppercase tracking-widest">Initialization Date</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">Created</span>
               </div>
               <p className="text-lg font-black text-black uppercase tracking-tight">
                 {new Date(item.created_at).toLocaleDateString(undefined, { dateStyle: 'long' })}
@@ -139,7 +139,7 @@ export default function ProjectsPage() {
             )}
             
             <div className="prose prose-zinc max-w-none text-black leading-loose">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 mb-8 ml-1">Initiative Content</h4>
+              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 mb-8 ml-1">Content</h4>
               <div className="markdown-monochrome">
                 {renderMarkdown(item.content || "")}
               </div>
@@ -149,20 +149,20 @@ export default function ProjectsPage() {
       )}
       renderEdit={(item, setItem) => (
         <div className="space-y-10">
-          <Input 
-            label="Initiative Name" 
-            placeholder="ENTER PROJECT TITLE..." 
+          <Input
+            label="Project Title"
+            placeholder="Enter project title..."
             value={item.title ?? ""} 
             onChange={e => setItem({ ...item, title: e.target.value })} 
           />
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-tight text-zinc-600">
-              Brief Intent summary
+              Summary
             </label>
             <textarea
               className="input-monochrome min-h-[100px] py-4"
-              placeholder="PRIMARY GOALS..."
+              placeholder="Describe the project goals..."
               value={item.description ?? ""}
               onChange={e => setItem({ ...item, description: e.target.value })}
             />
@@ -170,11 +170,11 @@ export default function ProjectsPage() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-tight text-zinc-600">
-              Technical Documentation (Markdown)
+              Content (Markdown supported)
             </label>
             <textarea
               className="input-monochrome min-h-[400px] py-6 font-mono text-sm"
-              placeholder="# TECHNICAL SPECIFICATIONS..."
+              placeholder="# Start writing..."
               value={item.content ?? ""}
               onChange={e => setItem({ ...item, content: e.target.value })}
             />

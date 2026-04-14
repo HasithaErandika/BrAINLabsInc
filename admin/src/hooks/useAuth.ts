@@ -1,10 +1,8 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// useAuth.ts — Global auth store using zustand.
-// ─────────────────────────────────────────────────────────────────────────────
+// hooks/useAuth.ts — Global auth store (Zustand + persist)
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { apiClient } from "../lib/api";
-import type { MemberRole, ApprovalStatus } from "../lib/api";
+import { apiClient, setAuthToken } from "../api";
+import type { MemberRole, ApprovalStatus } from "../types";
 
 export interface AuthUser {
   id: number;
@@ -42,10 +40,8 @@ export const useAuth = create<AuthState>()(
         try {
           const res = await apiClient.post("/auth/login", { email, password });
           const { token, user } = res.data;
-
-          // Store token explicitly for the apiClient interceptor
-          localStorage.setItem('brain_labs_token', token);
-
+          // Register token with the interceptor (single source of truth)
+          setAuthToken(token);
           set({ token, user });
           return { error: null };
         } catch (err: any) {
@@ -60,7 +56,7 @@ export const useAuth = create<AuthState>()(
       },
 
       logout: () => {
-        localStorage.removeItem('brain_labs_token');
+        setAuthToken(null);
         set({ user: null, token: null });
       },
 
@@ -79,7 +75,23 @@ export const useAuth = create<AuthState>()(
     }),
     {
       name: "brain_labs_auth",
+      // v1: strips the legacy _hasHydrated field that was accidentally persisted.
+      // Bumping the version triggers migrate() once for existing users, cleaning
+      // their stored data so the race condition cannot recur.
+      version: 1,
+      migrate: (persisted: any) => ({
+        token: persisted?.token ?? null,
+        user:  persisted?.user  ?? null,
+      }),
+      // Only persist what the app needs to restore a session.
+      // _hasHydrated must never be stored — it must always start false so
+      // ProtectedRoute holds rendering until onRehydrateStorage has run.
+      partialize: (state) => ({ token: state.token, user: state.user }),
       onRehydrateStorage: () => (state) => {
+        // Restore the in-memory token BEFORE setting _hasHydrated = true.
+        // main.tsx already primes _authToken synchronously, but this keeps
+        // the two sources in sync in case of concurrent tab reloads etc.
+        if (state?.token) setAuthToken(state.token);
         state?.setHasHydrated(true);
       },
     }

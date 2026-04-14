@@ -60,7 +60,7 @@ export default function GrantsPage() {
   return (
     <ContentPageTemplate<Grant>
       title="Grants"
-      subtitle={`${items.length} fiscal appropriations currently active.`}
+      subtitle={`${items.length} grant${items.length !== 1 ? "s" : ""} recorded.`}
       icon={Briefcase}
       items={items}
       loading={loading}
@@ -82,14 +82,14 @@ export default function GrantsPage() {
         <div
           key={item.id}
           onClick={onClick}
-          className="group border border-zinc-200 p-6 hover:border-black transition-all cursor-pointer flex flex-col gap-6 bg-white"
+          className="group bg-white border border-zinc-200 hover:border-zinc-400 hover:shadow-sm rounded-xl p-5 cursor-pointer flex flex-col gap-4 transition-all"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-black text-white shrink-0">
                 <Briefcase size={14} />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Fiscal Unit</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Grant</span>
             </div>
             <Badge status={item.approval_status} />
           </div>
@@ -117,7 +117,7 @@ export default function GrantsPage() {
             <div className="p-8 border border-zinc-200 bg-white space-y-4">
               <div className="flex items-center gap-2 text-zinc-400">
                 <ShieldCheck size={16} />
-                <span className="text-[10px] font-black uppercase tracking-widest">Compliance Status</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">Status</span>
               </div>
               <Badge status={item.approval_status} />
             </div>
@@ -140,7 +140,7 @@ export default function GrantsPage() {
           {item.description && (
             <div className="space-y-6">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 flex items-center gap-2">
-                <Info size={14} /> Scope of Appropriation
+                <Info size={14} /> Description
               </h4>
               <p className="text-sm font-bold text-black uppercase leading-loose tracking-tight whitespace-pre-wrap italic">
                 {item.description}
@@ -166,9 +166,9 @@ export default function GrantsPage() {
       )}
       renderEdit={(item, setItem) => (
         <div className="space-y-10">
-          <Input 
-            label="Appropriation Title" 
-            placeholder="ENTER GRANT NAME..." 
+          <Input
+            label="Grant Title"
+            placeholder="Enter grant name..."
             value={item.title ?? ""} 
             onChange={e => setItem({ ...item, title: e.target.value })} 
           />
@@ -188,17 +188,17 @@ export default function GrantsPage() {
             />
           </div>
 
-          <p className="p-8 border border-dashed border-zinc-200 text-center text-[10px] font-black text-zinc-300 uppercase tracking-widest">
-            Note: Documents are managed post-creation via official protocol.
+          <p className="p-8 border border-dashed border-zinc-200 text-center text-[10px] font-medium text-zinc-400 tracking-wide">
+            Documents can be attached after the grant is created.
           </p>
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-tight text-zinc-600">
-              Appropriation summary
+              Description
             </label>
             <textarea
               className="input-monochrome min-h-[160px] py-4"
-              placeholder="TERMS AND OBJECTIVES..."
+              placeholder="Describe the grant objectives..."
               value={item.description ?? ""}
               onChange={e => setItem({ ...item, description: e.target.value })}
             />

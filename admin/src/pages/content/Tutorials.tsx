@@ -59,7 +59,7 @@ export default function TutorialsPage() {
   return (
     <ContentPageTemplate<Tutorial>
       title="Tutorials"
-      subtitle={`${items.length} pedagogical assets indexed in the central registry.`}
+      subtitle={`${items.length} tutorial${items.length !== 1 ? "s" : ""} available.`}
       icon={GraduationCap}
       items={items}
       loading={loading}
@@ -81,14 +81,14 @@ export default function TutorialsPage() {
         <div 
           key={item.id} 
           onClick={onClick} 
-          className="group border border-zinc-200 p-6 hover:border-black transition-all cursor-pointer flex flex-col gap-6 bg-white"
+          className="group bg-white border border-zinc-200 hover:border-zinc-400 hover:shadow-sm rounded-xl p-5 cursor-pointer flex flex-col gap-4 transition-all"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-black text-white shrink-0">
                 <GraduationCap size={14} />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Educational Asset</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Tutorial</span>
             </div>
             <Badge status={item.approval_status} />
           </div>
@@ -104,7 +104,7 @@ export default function TutorialsPage() {
 
           <div className="pt-4 border-t border-zinc-100 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em]">
             <span className="flex items-center gap-2 text-black">
-              <BookOpen size={12} /> View Syllabus
+              <BookOpen size={12} /> View tutorial
             </span>
             <span className="flex items-center gap-2 text-zinc-400">
                <Calendar size={12} /> {new Date(item.created_at).toLocaleDateString()}
@@ -121,7 +121,7 @@ export default function TutorialsPage() {
             )}
             
             <div className="prose prose-zinc max-w-none text-black leading-loose">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 mb-8 ml-1">Curriculum Content</h4>
+              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 mb-8 ml-1">Content</h4>
               <div className="markdown-monochrome">
                 {renderMarkdown(item.content || "")}
               </div>
@@ -130,20 +130,20 @@ export default function TutorialsPage() {
       )}
       renderEdit={(item, setItem) => (
         <div className="space-y-10">
-          <Input 
-            label="Module Title" 
-            placeholder="ENTER TUTORIAL NAME..." 
+          <Input
+            label="Title"
+            placeholder="Enter tutorial title..."
             value={item.title ?? ""} 
             onChange={e => setItem({...item, title: e.target.value})} 
           />
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-tight text-zinc-600">
-              Syllabus summary
+              Summary
             </label>
             <textarea
               className="input-monochrome min-h-[100px] py-4"
-              placeholder="INTENDED LEARNING OUTCOMES..."
+              placeholder="What will learners achieve..."
               value={item.description ?? ""}
               onChange={e => setItem({...item, description: e.target.value})}
             />
@@ -151,11 +151,11 @@ export default function TutorialsPage() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-tight text-zinc-600">
-              Technical Content (Markdown)
+              Content (Markdown supported)
             </label>
             <textarea
               className="input-monochrome min-h-[400px] py-6 font-mono text-sm"
-              placeholder="# DETAILED INSTRUCTIONS..."
+              placeholder="# Start writing..."
               value={item.content ?? ""}
               onChange={e => setItem({...item, content: e.target.value})}
             />
