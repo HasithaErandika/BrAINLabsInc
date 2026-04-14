@@ -49,46 +49,46 @@ export function BasicInfoTab({ cv, onUpdate, isEditing }: Props) {
 
   if (!isEditing) {
     return (
-      <div className="space-y-12 animate-enter">
-        <div className="flex items-center gap-4 border-b border-black pb-6">
-           <div className="w-12 h-12 bg-black text-white flex items-center justify-center shrink-0">
-             <User size={24} />
+      <div className="space-y-8">
+        <div className="flex items-center gap-4 pb-6 border-b border-zinc-100">
+           <div className="w-12 h-12 bg-zinc-100 text-zinc-600 rounded-lg flex items-center justify-center shrink-0">
+             <User size={20} />
            </div>
            <div>
-             <h2 className="text-xl font-black uppercase tracking-tighter">Identity Core</h2>
-             <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Base Personnel Credentials</p>
+             <h2 className="text-xl font-bold text-zinc-900">Personal Information</h2>
+             <p className="text-sm text-zinc-500">Base Personnel Credentials</p>
            </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
-          <div className="space-y-2">
-            <label className="text-[9px] font-black text-zinc-300 uppercase tracking-[0.3em] block">Full Identity</label>
-            <p className="text-black font-bold uppercase tracking-tight text-sm flex items-center gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider block">Full Identity</label>
+            <p className="text-zinc-900 font-medium text-sm flex items-center gap-3">
               <User size={14} className="text-zinc-400" /> {cv.first_name} {cv.second_name}
             </p>
           </div>
-          <div className="space-y-2">
-            <label className="text-[9px] font-black text-zinc-300 uppercase tracking-[0.3em] block">Institutional Node</label>
-            <p className="text-black font-bold uppercase tracking-tight text-sm flex items-center gap-3">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider block">Institutional Node</label>
+            <p className="text-zinc-900 font-medium text-sm flex items-center gap-3">
               <Briefcase size={14} className="text-zinc-400" /> {cv.role_detail?.workplace || "Global Researcher"}
             </p>
           </div>
-          <div className="space-y-2">
-            <label className="text-[9px] font-black text-zinc-300 uppercase tracking-[0.3em] block">Communication Path</label>
-            <p className="text-black font-bold uppercase tracking-tight text-sm flex items-center gap-3">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider block">Communication Path</label>
+            <p className="text-zinc-900 font-medium text-sm flex items-center gap-3">
               <Mail size={14} className="text-zinc-400" /> {cv.contact_email}
             </p>
           </div>
-          <div className="space-y-2">
-            <label className="text-[9px] font-black text-zinc-300 uppercase tracking-[0.3em] block">Geographic Sector</label>
-            <p className="text-black font-bold uppercase tracking-tight text-sm flex items-center gap-3">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider block">Geographic Sector</label>
+            <p className="text-zinc-900 font-medium text-sm flex items-center gap-3">
               <Globe size={14} className="text-zinc-400" /> {cv.role_detail?.country || "Earth Terminal"}
             </p>
           </div>
-          <div className="md:col-span-2 space-y-4">
-            <label className="text-[9px] font-black text-zinc-300 uppercase tracking-[0.3em] block">Personnel Narrative</label>
-            <p className="text-black font-bold uppercase tracking-tight text-sm leading-loose whitespace-pre-wrap border-l-4 border-black pl-8 italic">
-              {cv.role_detail?.bio || "No mission statement has been recorded for this personnel node."}
+          <div className="md:col-span-2 space-y-2 pt-4">
+            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider block">Bio</label>
+            <p className="text-zinc-900 text-sm leading-relaxed whitespace-pre-wrap pl-4 border-l-2 border-zinc-200">
+              {cv.role_detail?.bio || "No biography provided."}
             </p>
           </div>
         </div>
@@ -97,44 +97,44 @@ export function BasicInfoTab({ cv, onUpdate, isEditing }: Props) {
   }
 
   return (
-    <div className="space-y-12 animate-enter">
-      <div className="flex items-center gap-4 border-b border-black pb-6">
-         <div className="w-12 h-12 bg-black text-white flex items-center justify-center shrink-0">
-           <User size={24} />
+    <div className="space-y-8">
+      <div className="flex items-center gap-4 pb-6 border-b border-zinc-100">
+         <div className="w-12 h-12 bg-zinc-100 text-zinc-600 rounded-lg flex items-center justify-center shrink-0">
+           <User size={20} />
          </div>
          <div>
-           <h2 className="text-xl font-black uppercase tracking-tighter">Modify Credentials</h2>
-           <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Update Primary Personnel Data</p>
+           <h2 className="text-xl font-bold text-zinc-900">Edit Profile</h2>
+           <p className="text-sm text-zinc-500">Update Primary Personnel Data</p>
          </div>
       </div>
       
       {error && (
-        <div className="p-6 border border-black bg-zinc-50 text-[10px] font-black text-black uppercase tracking-widest flex items-center gap-4">
-          <div className="w-2 h-2 bg-black animate-pulse" />
+        <div className="p-4 rounded-lg border border-red-200 bg-red-50 text-xs font-semibold text-red-600 flex items-center gap-3">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
           {error}
         </div>
       )}
       
-      <form onSubmit={handleSubmit} className="space-y-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Input label="GIVEN NAME" value={formData.first_name} onChange={e => setFormData({ ...formData, first_name: e.target.value })} required />
           <Input label="SURNAME" value={formData.second_name} onChange={e => setFormData({ ...formData, second_name: e.target.value })} required />
-          <Input label="INSTITUTIONAL ROLE" value={formData.occupation} onChange={e => setFormData({ ...formData, occupation: e.target.value })} placeholder="e.g., LEAD NEURAL ARCHITECT" />
-          <Input label="ACADEMIC NODE" value={formData.workplace} onChange={e => setFormData({ ...formData, workplace: e.target.value })} placeholder="e.g., MIT MEDIA LAB" />
+          <Input label="INSTITUTIONAL ROLE" value={formData.occupation} onChange={e => setFormData({ ...formData, occupation: e.target.value })} placeholder="e.g., Lead Neural Architect" />
+          <Input label="ACADEMIC NODE" value={formData.workplace} onChange={e => setFormData({ ...formData, workplace: e.target.value })} placeholder="e.g., MIT Media Lab" />
           
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.3em]">GEOGRAPHIC SECTOR</label>
-            <div className="relative">
-               <MapPin size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
-               <Input className="pl-12" value={formData.country} onChange={e => setFormData({ ...formData, country: e.target.value })} placeholder="e.g., UNITED STATES" />
+            <label className="text-xs font-semibold text-zinc-600 uppercase tracking-tight">GEOGRAPHIC SECTOR</label>
+            <div className="relative flex items-center">
+               <MapPin size={16} className="absolute left-4 text-zinc-400" />
+               <input className="w-full bg-zinc-50 border border-zinc-200 rounded-xl pl-11 pr-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:bg-white" value={formData.country} onChange={e => setFormData({ ...formData, country: e.target.value })} placeholder="e.g., United States" />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.3em]">LINKEDIN PROTOCOL</label>
-            <div className="relative">
-               <Linkedin size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
-               <Input className="pl-12" value={formData.linkedin_url} onChange={e => setFormData({ ...formData, linkedin_url: e.target.value })} placeholder="https://linkedin.com/..." />
+            <label className="text-xs font-semibold text-zinc-600 uppercase tracking-tight">LINKEDIN URL</label>
+            <div className="relative flex items-center">
+               <Linkedin size={16} className="absolute left-4 text-zinc-400" />
+               <input className="w-full bg-zinc-50 border border-zinc-200 rounded-xl pl-11 pr-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:bg-white" value={formData.linkedin_url} onChange={e => setFormData({ ...formData, linkedin_url: e.target.value })} placeholder="https://linkedin.com/..." />
             </div>
           </div>
 
@@ -142,24 +142,24 @@ export function BasicInfoTab({ cv, onUpdate, isEditing }: Props) {
             <Input label="AVATAR RESOURCE LOCATION" value={formData.image_url} onChange={e => setFormData({ ...formData, image_url: e.target.value })} placeholder="https://..." />
           </div>
 
-          <div className="md:col-span-2 space-y-2">
-            <label className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.3em]">PERSONNEL NARRATIVE (BIO)</label>
+          <div className="md:col-span-2 space-y-1.5">
+            <label className="text-xs font-semibold text-zinc-600 uppercase tracking-tight">BIO</label>
             <textarea 
-              className="input-monochrome min-h-[200px] py-6 uppercase font-bold text-xs" 
+              className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:bg-white min-h-[160px]" 
               value={formData.bio} 
               onChange={e => setFormData({ ...formData, bio: e.target.value })} 
-              placeholder="STATE RESEARCH PHILOSOPHY AND MISSION..." 
+              placeholder="Brief biography..." 
             />
           </div>
         </div>
         
-        <div className="pt-12 flex items-center justify-between border-t border-black">
+        <div className="pt-8 flex items-center justify-between border-t border-zinc-100">
           {success ? (
-            <span className="text-[10px] font-black text-black uppercase tracking-[0.4em] animate-pulse">Identity Synchronized</span>
+            <span className="text-sm font-semibold text-green-600 flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-green-600 animate-pulse" /> Identity updated</span>
           ) : <div />}
           
-          <Button type="submit" isLoading={saving} className="h-14 px-12 text-[11px] font-black tracking-[0.3em] uppercase">
-            COMMIT CREDENTIALS
+          <Button type="submit" isLoading={saving} className="px-6 h-10 text-xs font-semibold">
+            Save Changes
           </Button>
         </div>
       </form>

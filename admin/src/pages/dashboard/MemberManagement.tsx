@@ -60,13 +60,13 @@ export default function MemberManagement() {
 
   if (view === "detail" && selectedMember) {
     return (
-      <div className="space-y-8 animate-enter">
-        <div className="flex items-center justify-between border-b border-black pb-6">
+      <div className="space-y-6 animate-enter">
+        <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
           <button
             onClick={() => setView("list")}
-            className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-colors"
+            className="flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
           >
-            <ArrowLeft size={14} /> Back to Members
+            <ArrowLeft size={15} /> Back to Members
           </button>
 
           {isAdmin() && (
@@ -94,32 +94,33 @@ export default function MemberManagement() {
           )}
         </div>
 
-        <div className="max-w-4xl mx-auto space-y-12 py-12">
-          <div className="border border-black p-12 flex flex-col md:flex-row gap-12 items-center md:items-start bg-white">
-            <div className="w-32 h-32 bg-black flex items-center justify-center text-4xl font-black text-white shrink-0">
+        <div className="max-w-3xl mx-auto space-y-8 py-8">
+          <div className="border border-zinc-200 rounded-xl p-8 flex flex-col md:flex-row gap-8 items-center md:items-start bg-white">
+            <div className="w-24 h-24 bg-zinc-100 rounded-full flex items-center justify-center text-3xl font-medium text-zinc-600 shrink-0">
               {selectedMember.first_name[0]}{selectedMember.second_name[0]}
             </div>
 
             <div className="flex-1 text-center md:text-left space-y-6">
-              <div className="space-y-1">
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-2">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 mb-2">
                   <Badge status={selectedMember.approval_status} />
-                  <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.25em]">#{selectedMember.id}</span>
+                  <span className="text-xs text-zinc-400">#{selectedMember.id}</span>
                 </div>
-                <h1 className="text-5xl font-black text-black tracking-tighter uppercase leading-none">
+                <h1 className="text-3xl font-bold text-zinc-900 leading-tight">
                   {selectedMember.first_name} {selectedMember.second_name}
                 </h1>
-                <p className="text-xs font-black text-zinc-400 uppercase tracking-[0.25em] pt-2">
+                <p className="text-sm font-medium text-zinc-500 capitalize">
                   {selectedMember.role.replace("_", " ")}
                 </p>
               </div>
 
-              <div className="pt-6 border-t border-zinc-100 flex flex-col gap-4">
-                <p className="flex items-center justify-center md:justify-start gap-3 text-sm font-bold text-black uppercase tracking-tight">
+              <div className="pt-6 border-t border-zinc-100 flex flex-col gap-3">
+                <p className="flex items-center justify-center md:justify-start gap-3 text-sm text-zinc-700">
                   <Mail size={16} className="text-zinc-400" />
                   {selectedMember.contact_email}
                 </p>
-                <p className="flex items-center justify-center md:justify-start gap-3 text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-loose">
+                <p className="flex items-center justify-center md:justify-start gap-3 text-xs text-zinc-500">
+                  <Clock size={14} className="text-zinc-400" />
                   Joined: {new Date(selectedMember.created_at).toLocaleDateString(undefined, { dateStyle: 'long' })}
                 </p>
               </div>
@@ -133,15 +134,15 @@ export default function MemberManagement() {
   // ─── List view ────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-12 animate-enter pb-32">
-      <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-black pb-8">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-zinc-400">
+    <div className="space-y-6 pb-20">
+      <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-2">
+        <div>
+          <div className="flex items-center gap-2 mb-1 text-zinc-400">
             <ShieldCheck size={14} />
-            <span className="text-[10px] font-black uppercase tracking-[0.25em]">Admin</span>
+            <span className="text-xs font-medium uppercase tracking-widest">Admin</span>
           </div>
-          <h1 className="text-4xl font-black text-black tracking-tighter uppercase">Members</h1>
-          <p className="text-xs font-bold text-zinc-500 uppercase tracking-tight">Approve registrations and manage member access.</p>
+          <h1 className="text-2xl font-bold text-zinc-900">Member Management</h1>
+          <p className="text-sm text-zinc-500 mt-0.5">Approve registrations and manage member access.</p>
         </div>
       </div>
 
@@ -152,53 +153,52 @@ export default function MemberManagement() {
       </div>
 
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-4">
-          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-300">{filtered.length} member{filtered.length !== 1 ? "s" : ""}</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="relative max-w-sm w-full">
             <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
             <Input
               placeholder="Search by name or email..."
-              className="pl-10 h-10 text-[10px]"
+              className="pl-10 h-10 py-2 text-sm"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="overflow-x-auto border border-zinc-200">
-          <table className="w-full text-left">
+        <div className="overflow-hidden border border-zinc-200 rounded-xl bg-white">
+          <table className="w-full text-left bg-white">
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-200">
-                <th className="px-6 py-4 text-[10px] font-black text-black uppercase tracking-widest">Member</th>
-                <th className="px-6 py-4 text-[10px] font-black text-black uppercase tracking-widest">Role</th>
-                <th className="px-6 py-4 text-[10px] font-black text-black uppercase tracking-widest">Status</th>
-                <th className="px-6 py-4 text-[10px] font-black text-black uppercase tracking-widest text-right">Actions</th>
+                <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Member</th>
+                <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Role</th>
+                <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {filtered.map(m => (
                 <tr key={m.id} className="hover:bg-zinc-50 transition-colors group">
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-black flex items-center justify-center text-[12px] font-black text-white shrink-0">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-zinc-100 text-zinc-600 rounded-full flex items-center justify-center font-medium shrink-0">
                         {m.first_name[0]}{m.second_name[0]}
                       </div>
                       <div>
-                        <p className="text-[13px] font-black text-black uppercase tracking-tight">{m.first_name} {m.second_name}</p>
-                        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">{m.contact_email}</p>
+                        <p className="text-sm font-medium text-zinc-900">{m.first_name} {m.second_name}</p>
+                        <p className="text-xs text-zinc-500">{m.contact_email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-5">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]">
+                  <td className="px-6 py-4">
+                    <span className="text-xs font-medium text-zinc-600 capitalize">
                       {m.role.replace("_", " ")}
                     </span>
                   </td>
-                  <td className="px-6 py-5">
+                  <td className="px-6 py-4">
                     <Badge status={m.approval_status} />
                   </td>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center justify-end gap-3">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-2">
                       {isAdmin() && m.approval_status !== "APPROVED" && (
                         <Button
                           onClick={() => handleStatusChange(m, "approve")}
@@ -210,7 +210,7 @@ export default function MemberManagement() {
                       )}
                       <button
                         onClick={() => { setSelectedId(m.id); setView("detail"); }}
-                        className="p-2 text-zinc-400 hover:text-black hover:bg-white border hover:border-black transition-all"
+                        className="p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 rounded-lg transition-all"
                         title="View details"
                       >
                         <Eye size={16} />
@@ -223,8 +223,9 @@ export default function MemberManagement() {
           </table>
 
           {filtered.length === 0 && (
-            <div className="py-24 text-center bg-zinc-50/50">
-              <p className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.3em]">No members found</p>
+            <div className="py-20 text-center bg-white flex flex-col items-center">
+              <Users size={24} className="text-zinc-300 mb-2" />
+              <p className="text-sm font-medium text-zinc-400">No members found</p>
             </div>
           )}
         </div>

@@ -51,9 +51,9 @@ export default function Account() {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-white p-8">
-        <div className="flex flex-col items-center gap-6">
-           <div className="w-12 h-12 border-4 border-black border-t-transparent animate-spin" />
-           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-black">Authenticating Identity...</p>
+        <div className="flex flex-col items-center gap-4">
+           <div className="w-8 h-8 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin" />
+           <p className="text-sm font-medium text-zinc-500">Loading profile...</p>
         </div>
       </div>
     );
@@ -62,16 +62,16 @@ export default function Account() {
   if (error || !profile) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white p-8">
-        <div className="max-w-md w-full border border-black p-12 text-center space-y-8">
-           <div className="w-16 h-16 bg-black text-white flex items-center justify-center mx-auto">
-              <User size={32} />
+        <div className="max-w-md w-full border border-zinc-200 rounded-xl p-8 text-center space-y-6">
+           <div className="w-12 h-12 bg-zinc-100 text-zinc-500 rounded-full flex items-center justify-center mx-auto">
+              <User size={24} />
            </div>
-           <div className="space-y-2">
-              <h2 className="text-2xl font-black uppercase tracking-tighter">Identity Conflict</h2>
-              <p className="text-xs font-bold text-zinc-500 uppercase leading-loose">{error || "Access Denied: Could not resolve personnel profile."}</p>
+           <div className="space-y-1.5">
+              <h2 className="text-xl font-bold text-zinc-900">Profile Unavailable</h2>
+              <p className="text-sm text-zinc-500">{error || "Could not resolve your profile data."}</p>
            </div>
-           <Button onClick={() => window.location.reload()} className="w-full uppercase text-[10px] tracking-widest font-black">
-              Retry Protocol
+           <Button onClick={() => window.location.reload()} className="w-full">
+              Retry
            </Button>
         </div>
       </div>
@@ -79,53 +79,53 @@ export default function Account() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-white animate-enter">
+    <div className="flex flex-col lg:flex-row min-h-[90vh] bg-white border border-zinc-200 rounded-xl overflow-hidden mt-6 mx-6 lg:mx-10 mb-20 shadow-sm">
       {/* Sidebar Control Panel */}
-      <div className="w-full lg:w-80 shrink-0 border-b lg:border-b-0 lg:border-r border-black p-8 lg:p-10 space-y-12">
-        <div className="space-y-6">
-          <div className="w-24 h-24 bg-black flex items-center justify-center text-4xl font-black text-white">
+      <div className="w-full lg:w-[280px] shrink-0 border-b lg:border-b-0 lg:border-r border-zinc-200 bg-zinc-50/50 p-6 lg:p-8 flex flex-col">
+        <div className="space-y-5 mb-8">
+          <div className="w-20 h-20 bg-zinc-200 text-zinc-600 rounded-full flex items-center justify-center text-3xl font-medium mx-auto lg:mx-0 shadow-inner">
             {profile.first_name[0]}{profile.second_name[0]}
           </div>
-          <div className="space-y-1">
-            <h1 className="text-3xl font-black tracking-tighter uppercase leading-none">{profile.first_name} {profile.second_name}</h1>
-            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest pt-2">
+          <div className="text-center lg:text-left">
+            <h1 className="text-xl font-bold text-zinc-900">{profile.first_name} {profile.second_name}</h1>
+            <p className="text-sm font-medium text-zinc-500 capitalize mt-0.5">
               {profile.role.replace('_', ' ')}
             </p>
           </div>
         </div>
         
-        <nav className="space-y-1">
-          <p className="text-[9px] font-black text-zinc-300 uppercase tracking-[0.3em] mb-4 ml-1">Profile Sections</p>
+        <nav className="space-y-1.5 flex-1">
+          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3 px-1">Settings</p>
           {filteredTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`w-full flex items-center gap-4 px-4 py-4 text-[10px] font-black uppercase tracking-widest border transition-all ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
                 activeTab === tab.id
-                  ? "bg-black text-white border-black"
-                  : "text-zinc-500 hover:text-black border-transparent hover:border-black"
+                  ? "bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-200"
+                  : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
               }`}
             >
-              <tab.icon size={14} />
+              <tab.icon size={16} className={activeTab === tab.id ? "text-zinc-700" : "text-zinc-400"} />
               {tab.label}
             </button>
           ))}
           
-          <div className="pt-8 mt-8 border-t border-zinc-100">
+          <div className="pt-6 mt-6 border-t border-zinc-200">
             <Button
               variant={isEditing ? "primary" : "outline"}
               onClick={() => setIsEditing(!isEditing)}
-              className="w-full h-12 uppercase text-[10px] tracking-[0.2em] font-black"
+              className="w-full justify-start text-sm"
             >
-              {isEditing ? <><Check size={14} className="mr-2" /> Commit Profile</> : <><Edit3 size={14} className="mr-2" /> Modify Profile</>}
+              {isEditing ? <><Check size={16} className="mr-2" /> Save Profile</> : <><Edit3 size={16} className="mr-2" /> Edit Profile</>}
             </Button>
           </div>
         </nav>
       </div>
 
       {/* Profile Content Display */}
-      <div className="flex-1 bg-white p-8 lg:p-20 overflow-y-auto">
-        <div className="max-w-4xl mx-auto">
+      <div className="flex-1 bg-white p-6 lg:p-10 overflow-y-auto">
+        <div className="max-w-3xl">
           {activeTab === "basic" && <BasicInfoTab cv={profile} onUpdate={fetchProfile} isEditing={isEditing} />}
           {activeTab === "research" && <OngoingResearchTab cv={profile} onUpdate={fetchProfile} isEditing={isEditing} />}
           {activeTab === "qualifications" && <QualificationsTab cv={profile} onUpdate={fetchProfile} isEditing={isEditing} />}

@@ -16,7 +16,7 @@ export default function Dashboard() {
   }
 
   // Handle Pending status for Researchers and Assistants
-  if (user.approval_status === 'PENDING' && !isAdmin()) {
+  if (user.approval_status === 'PENDING_ADMIN' && !isAdmin()) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh] p-10 text-center space-y-12 animate-enter">
         <div className="w-24 h-24 bg-black flex items-center justify-center border border-black group">

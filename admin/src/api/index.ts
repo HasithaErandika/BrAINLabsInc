@@ -6,7 +6,7 @@ import type {
   BaseMember, EducationalBackground, OngoingResearch
 } from '../types';
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -26,8 +26,23 @@ export function setAuthToken(token: string | null) {
 
 // ── Request interceptor — attach Bearer token ────────────────────────────────
 apiClient.interceptors.request.use((config) => {
-  if (_authToken && config.headers) {
-    config.headers.Authorization = `Bearer ${_authToken}`;
+  let token = _authToken;
+  
+  // Hard fallback to localStorage to survive Vite HMR clearing module variables
+  // seamlessly avoiding circular dependencies with useAuth.ts
+  if (!token) {
+    try {
+      const persisted = localStorage.getItem("brain_labs_auth");
+      if (persisted) {
+        token = JSON.parse(persisted).state?.token;
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+  }
+
+  if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });

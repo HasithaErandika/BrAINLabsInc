@@ -74,9 +74,11 @@ export function ContentPageTemplate<
             <h1 className="text-2xl font-bold text-zinc-900">{title}</h1>
             <p className="text-sm text-zinc-500 mt-0.5">{subtitle}</p>
           </div>
-          <Button onClick={handleCreate} className="shrink-0 h-9 px-4 text-xs font-semibold">
-            <Plus size={13} className="mr-1.5" /> New
-          </Button>
+          {!isAdmin && (
+            <Button onClick={handleCreate} className="shrink-0 h-9 px-4 text-xs font-semibold">
+              <Plus size={13} className="mr-1.5" /> New
+            </Button>
+          )}
         </div>
 
         {/* Search + filter */}
@@ -150,17 +152,17 @@ export function ContentPageTemplate<
             <ArrowLeft size={15} /> Back to {title}
           </button>
           <div className="flex items-center gap-2">
-            {status === "DRAFT" && (
+            {status === "DRAFT" && !isAdmin && (
               <Button variant="outline" onClick={() => handleEdit(selectedItem)} className="h-8 px-3 text-xs">
                 Edit
               </Button>
             )}
-            {status === "DRAFT" && onSubmitForReview && (
+            {status === "DRAFT" && onSubmitForReview && !isAdmin && (
               <Button onClick={() => onSubmitForReview(selectedItem)} className="h-8 px-3 text-xs">
                 Submit for review
               </Button>
             )}
-            {isResearcher && status === "PENDING_RESEARCHER" && onReview && (
+            {isResearcher && status === "PENDING_RESEARCHER" && !isAdmin && onReview && (
               <>
                 <Button variant="outline" onClick={() => onReview(selectedItem, 'REJECTED')}
                   className="h-8 px-3 text-xs border-red-200 text-red-600 hover:bg-red-50">

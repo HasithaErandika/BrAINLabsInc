@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, BookOpen, FileText, Inbox, ArrowRight, CheckSquare2, ShieldAlert, Plus, CalendarDays, FlaskConical } from "lucide-react";
+import { Users, BookOpen, FileText, Inbox, ArrowRight, CheckSquare2, ShieldAlert } from "lucide-react";
 import { Link } from "react-router-dom";
 import { api } from "../../api";
 import { useAuth } from "../../hooks/useAuth";
@@ -186,28 +186,7 @@ export function AdminDashboard() {
         {/* Sidebar — 1/3 */}
         <div className="flex flex-col gap-4">
 
-          {/* Quick create */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-5 space-y-2.5">
-            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-1">Quick Create</p>
-            {[
-              { label: "New Publication", href: "/publications", icon: BookOpen },
-              { label: "New Blog Post",   href: "/blog",         icon: FileText },
-              { label: "New Event",       href: "/events",       icon: CalendarDays },
-              { label: "New Project",     href: "/projects",     icon: FlaskConical },
-            ].map(a => (
-              <Link
-                key={a.href}
-                to={a.href}
-                className="flex items-center justify-between w-full px-3.5 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 rounded-lg border border-zinc-100 hover:border-zinc-200 transition-all group"
-              >
-                <span className="flex items-center gap-2.5">
-                  <a.icon size={13} className="text-zinc-400" />
-                  {a.label}
-                </span>
-                <Plus size={12} className="text-zinc-300 group-hover:text-zinc-600 transition-colors" />
-              </Link>
-            ))}
-          </div>
+
 
           {/* Members CTA */}
           <Link to="/dashboard/members" className="block flex-1">

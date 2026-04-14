@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Loader2, Plus, Trash2, GraduationCap } from "lucide-react";
 import { api } from "../../../api";
 import type { Profile } from "../../../types";
-import { Input } from "../../../components/ui/Input";
 import { Button } from "../../../components/ui/Button";
 
 interface Props {
@@ -44,28 +43,30 @@ export function QualificationsTab({ cv, onUpdate, isEditing }: Props) {
   };
 
   return (
-    <div className="space-y-12 animate-enter">
-      <div className="flex items-center gap-4 border-b border-black pb-6">
-         <div className="w-12 h-12 bg-black text-white flex items-center justify-center shrink-0">
-           <GraduationCap size={24} />
+    <div className="space-y-8">
+      <div className="flex items-center gap-4 pb-6 border-b border-zinc-100">
+         <div className="w-12 h-12 bg-zinc-100 text-zinc-600 rounded-lg flex items-center justify-center shrink-0">
+           <GraduationCap size={20} />
          </div>
          <div>
-           <h2 className="text-xl font-black uppercase tracking-tighter">Academic Registry</h2>
-           <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Verified Educational Assets</p>
+           <h2 className="text-xl font-bold text-zinc-900">Academic Records</h2>
+           <p className="text-sm text-zinc-500">Verified educational background</p>
          </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {cv.role_detail?.education?.map((edu) => (
-          <div key={edu.id} className="group p-8 border border-zinc-200 flex items-center justify-between bg-white hover:border-black transition-all">
-             <div className="flex items-center gap-6">
-                <div className="w-10 h-10 border border-black flex items-center justify-center text-black font-black uppercase text-[10px]">EDU</div>
-                <span className="text-xs font-black text-black tracking-widest uppercase">{edu.degree}</span>
+          <div key={edu.id} className="group p-5 rounded-xl border border-zinc-200 flex items-center justify-between bg-white hover:border-zinc-300 transition-all">
+             <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-zinc-50 rounded-lg flex items-center justify-center text-zinc-400">
+                  <GraduationCap size={18} />
+                </div>
+                <span className="text-sm font-semibold text-zinc-900">{edu.degree}</span>
              </div>
              {isEditing && (
                <button 
                  onClick={() => handleDelete(edu.id)} 
-                 className="p-3 text-zinc-300 hover:text-black hover:bg-zinc-50 border border-transparent hover:border-black transition-all"
+                 className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                  disabled={deletingId === edu.id}
                >
                  {deletingId === edu.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
@@ -74,27 +75,30 @@ export function QualificationsTab({ cv, onUpdate, isEditing }: Props) {
           </div>
         ))}
         {(!cv.role_detail?.education || cv.role_detail.education.length === 0) && (
-          <div className="py-20 border border-dashed border-zinc-200 text-center bg-zinc-50/50">
-             <p className="text-[9px] font-black uppercase text-zinc-300 tracking-[0.4em]">No Academic Protocol Found</p>
+          <div className="py-12 border border-dashed border-zinc-200 rounded-xl text-center bg-zinc-50/50">
+             <p className="text-sm font-medium text-zinc-400">No education records found</p>
           </div>
         )}
       </div>
 
       {isEditing && (
-        <form onSubmit={handleAdd} className="pt-12 border-t border-black space-y-8">
-           <Input 
-             label="LEGACY DEGREE IDENTITY" 
-             placeholder="e.g., PHD IN NEURAL NETWORKS" 
-             value={newDegree} 
-             onChange={e => setNewDegree(e.target.value)} 
-           />
+        <form onSubmit={handleAdd} className="pt-8 border-t border-zinc-100 flex gap-4 items-end">
+           <div className="flex-1">
+             <label className="text-xs font-semibold text-zinc-600 uppercase tracking-tight block mb-1.5">New Degree</label>
+             <input 
+               className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:bg-white"
+               placeholder="e.g., PhD in Neural Networks" 
+               value={newDegree} 
+               onChange={e => setNewDegree(e.target.value)} 
+             />
+           </div>
            <Button 
              type="submit" 
              disabled={adding || !newDegree} 
              isLoading={adding}
-             className="h-14 px-8 text-[11px] font-black tracking-[0.2em] uppercase"
+             className="h-10 px-6 text-xs font-semibold shrink-0 mb-0.5"
            >
-             <Plus size={14} className="mr-2" /> LINK ACADEMIC NODE
+             <Plus size={14} className="mr-1.5" /> Add Record
            </Button>
         </form>
       )}

@@ -80,6 +80,9 @@
 ### Bug fixes
 - [x] Removed duplicate API client (`admin/src/lib/api.ts` — old, had wrong status strings)
 - [x] All pages import from `../../api` (the correct `admin/src/api/index.ts`)
+- [x] Fixed `ApprovalStatus` mismatch checking (`'PENDING'` shifted to `'PENDING_ADMIN'`)
+- [x] Corrected backend port to 3000 across env files and API client
+- [x] Created proper `.env.example` configurations and updated `.gitignore`
 
 ### Jargon removed — all pages now use plain language
 - [x] Login: "Institutional Oversight Terminal" → "Admin Dashboard"; "Authorize Access" → "Sign In"

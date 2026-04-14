@@ -81,7 +81,7 @@ export function AppLayout() {
 
         // Pending member registrations
         (members as BaseMember[])
-          .filter(m => m.approval_status === "PENDING")
+          .filter(m => m.approval_status === "PENDING_ADMIN")
           .forEach(m => notifs.push({
             id: `member-${m.id}`,
             kind: "member_request",
