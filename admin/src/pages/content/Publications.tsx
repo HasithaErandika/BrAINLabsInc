@@ -1,16 +1,29 @@
 import { useState, useEffect } from "react";
-import { BookOpen, Calendar, Globe, Users, Bookmark, FileStack, Hash, Info, ArrowRight } from "lucide-react";
+import { BookOpen, Calendar, Users, Bookmark, ArrowRight, Info, ExternalLink } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { api, type Publication, type ApprovalStatus, type PublicationType } from "../../lib/api";
+import { api } from "../../api";
+import type { Publication, ApprovalStatus, PublicationType } from "../../types";
 import { ContentPageTemplate } from "../../components/shared/ContentPageTemplate";
-import { FormField, FormInput, FormTextArea, FormSelect } from "../../components/shared/FormElements";
-import { Badge } from "../../components/shared/UIPrimitives";
+import { Input } from "../../components/ui/Input";
+import { Badge } from "../../components/ui/Badge";
+import { Button } from "../../components/ui/Button";
 
-export default function Publications() {
-  const { isAdmin } = useAuth();
+const subtypeKey = (type: PublicationType): keyof Publication => {
+  if (type === 'CONFERENCE') return 'conference_paper';
+  return type.toLowerCase() as keyof Publication;
+};
+
+const TYPE_LABELS: Record<PublicationType, string> = {
+  ARTICLE: 'Research Article',
+  CONFERENCE: 'Conference Paper',
+  BOOK: 'Academic Book',
+  JOURNAL: 'Journal Periodical',
+};
+
+export default function PublicationsPage() {
+  const { isAdmin, isResearcher } = useAuth();
   const [items, setItems] = useState<Publication[]>([]);
   const [loading, setLoading] = useState(true);
-  const isUserAdmin = isAdmin();
 
   const fetchItems = async () => {
     try {
@@ -27,34 +40,51 @@ export default function Publications() {
 
   const emptyItem: Partial<Publication> = {
     title: "",
+    authors: "",
+    publication_year: new Date().getFullYear(),
     type: "ARTICLE",
-    approval_status: "PENDING" as ApprovalStatus,
+    approval_status: "DRAFT" as ApprovalStatus,
   };
 
   const handleSave = async (item: Partial<Publication>) => {
-    try {
-      let publicationId = item.id;
-      if (publicationId) {
-        await api.publications.update(publicationId, item);
-      } else {
-        const saved = await api.publications.create(item);
-        publicationId = saved.id;
-      }
+    let publicationId = item.id;
 
-      const type = item.type?.toLowerCase();
-      if (publicationId && type && type !== "generic") {
-        const key = type === "conference" ? "conference_paper" : type;
-        const subtypeData = (item as any)[key];
-        if (subtypeData) {
-          await api.publications.linkSubtype(publicationId, type, subtypeData);
+    if (publicationId) {
+      await api.publications.update(Number(publicationId), item);
+    } else {
+      const saved = await api.publications.create(item);
+      publicationId = saved.id;
+    }
+
+    // Wire subtype data to the ISA sub-table
+    if (publicationId && item.type) {
+      const key = subtypeKey(item.type);
+      const subtypeData = (item as any)[key];
+      if (subtypeData && Object.keys(subtypeData).length > 0) {
+        const subtypeEndpoint =
+          item.type === 'CONFERENCE' ? 'conference-paper' :
+          item.type === 'BOOK'       ? 'book' :
+          item.type === 'JOURNAL'    ? 'journal' : 'article';
+        try {
+          await api.publications.linkSubtype(Number(publicationId), subtypeEndpoint, subtypeData);
+        } catch (err: any) {
+          // 409 = duplicate identifier — not a fatal error, data is already there
+          if (err?.response?.status !== 409) throw err;
         }
       }
-      
-      await fetchItems();
-    } catch (err) {
-      console.error("Publication save error:", err);
-      throw err;
     }
+
+    await fetchItems();
+  };
+
+  const handleSubmitForReview = async (item: Publication) => {
+    await api.content.submit("publication", item.id);
+    await fetchItems();
+  };
+
+  const handleReview = async (item: Publication, status: 'PENDING_ADMIN' | 'REJECTED') => {
+    await api.content.review("publication", item.id, status);
+    await fetchItems();
   };
 
   const handleToggleStatus = async (item: Publication) => {
@@ -67,194 +97,214 @@ export default function Publications() {
   return (
     <ContentPageTemplate<Publication>
       title="Publications"
-      subtitle={`${items.length} scientific records indexed in the professional registry.`}
+      subtitle={`${items.length} publication${items.length !== 1 ? "s" : ""}.`}
       icon={BookOpen}
       items={items}
       loading={loading}
-      isAdmin={isUserAdmin}
+      isAdmin={isAdmin()}
+      isResearcher={isResearcher()}
       emptyItem={emptyItem}
       onSave={handleSave}
-      onToggleStatus={isUserAdmin ? handleToggleStatus : undefined}
-      searchFields={(item) => [item.title, item.type || "Generic"]}
+      onSubmitForReview={handleSubmitForReview}
+      onReview={handleReview}
+      onToggleStatus={isAdmin() ? handleToggleStatus : undefined}
+      searchFields={(item) => [item.title, item.authors ?? "", item.type ?? ""]}
       filterOptions={[
-        { label: "ALL RECORDS", value: "ALL" },
+        { label: "ALL", value: "ALL" },
         { label: "PUBLISHED", value: "APPROVED" },
-        { label: "PENDING", value: "PENDING" },
+        { label: "PENDING", value: "PENDING_ADMIN" },
+        { label: "DRAFT", value: "DRAFT" },
       ]}
       renderListItem={(item, onClick) => (
-        <article key={item.id} onClick={onClick} className="group relative bg-white border border-zinc-100 p-10 hover:shadow-2xl hover:shadow-zinc-200/50 transition-all duration-500 cursor-pointer flex flex-col gap-8 rounded-3xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="flex items-start justify-between">
-             <div className="flex items-center gap-4">
-                <div className="p-2.5 bg-zinc-900 text-white rounded-xl shadow-lg opacity-90">
-                   <BookOpen size={18} />
-                </div>
-                <span className="text-[11px] font-black uppercase tracking-[0.25em] text-zinc-900 border-b-2 border-zinc-900 pb-0.5">
-                   {item.type || "GENERIC"}
-                </span>
-             </div>
-             <Badge status={item.approval_status} className="rounded-full" />
+        <div
+          key={item.id}
+          onClick={onClick}
+          className="group bg-white border border-zinc-200 hover:border-zinc-400 hover:shadow-sm rounded-xl p-5 cursor-pointer flex flex-col gap-4 transition-all"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 bg-zinc-100 rounded-lg flex items-center justify-center shrink-0">
+                <BookOpen size={13} className="text-zinc-600" />
+              </div>
+              <span className="text-xs font-medium text-zinc-500">
+                {item.type ? TYPE_LABELS[item.type] : "Publication"}
+              </span>
+            </div>
+            <Badge status={item.approval_status} />
           </div>
-          <div className="flex-1 min-w-0">
-             <h3 className="text-2xl font-black text-zinc-900 leading-tight group-hover:text-black transition-all line-clamp-2 uppercase tracking-tighter">{item.title}</h3>
-             <p className="text-[11px] text-zinc-400 font-bold uppercase tracking-[0.2em] mt-6 flex items-center gap-3 bg-zinc-50 px-4 py-2 rounded-full w-fit border border-zinc-100">
-               <Hash size={14} className="text-zinc-300" /> {item.type === "BOOK" ? item.book?.isbn || "UNSET" : item.type === "ARTICLE" ? item.article?.doi || "UNSET" : `NODEID: #${item.id?.toString().slice(-6).toUpperCase()}`}
-             </p>
+
+          <div className="space-y-1.5">
+            <h3 className="text-sm font-semibold text-zinc-900 leading-snug line-clamp-2">{item.title}</h3>
+            {item.authors && (
+              <p className="text-xs text-zinc-400 line-clamp-1">{item.authors}</p>
+            )}
           </div>
-          <div className="pt-8 border-t border-zinc-50 flex items-center justify-between">
-             <span className="text-[10px] font-black text-zinc-300 uppercase tracking-widest">{new Date(item.created_at).toLocaleDateString()}</span>
-             <div className="flex items-center gap-3 text-[11px] font-black text-zinc-900 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all uppercase tracking-widest">
-                Examine Asset <ArrowRight size={14} />
-             </div>
+
+          <div className="pt-3 border-t border-zinc-100 flex items-center justify-between">
+            <span className="text-xs text-zinc-500">
+              {item.publication_year ?? new Date(item.created_at).getFullYear()}
+            </span>
+            <ArrowRight size={13} className="text-zinc-300 group-hover:text-zinc-600 group-hover:translate-x-0.5 transition-all" />
           </div>
-        </article>
+        </div>
       )}
       renderDetail={(item) => {
         const type = item.type;
-        const details = type === "CONFERENCE" ? item.conference_paper : type === "BOOK" ? item.book : type === "JOURNAL" ? item.journal : item.article;
-        
+        const details = type ? (item as any)[subtypeKey(type)] : null;
+
         return (
-          <div className="space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-               <div className="p-10 bg-white border border-zinc-100 rounded-3xl shadow-xl shadow-zinc-200/30">
-                  <div className="flex items-center gap-4 mb-6 text-zinc-300">
-                     <Bookmark size={20} />
-                     <span className="text-[11px] font-black uppercase tracking-[0.3em]">Specialization</span>
-                  </div>
-                  <p className="text-xl font-black text-black uppercase tracking-tighter">{type || "Publication"}</p>
-               </div>
-               <div className="p-10 bg-white border border-zinc-100 rounded-3xl shadow-xl shadow-zinc-200/30">
-                  <div className="flex items-center gap-4 mb-6 text-zinc-300">
-                     <Calendar size={20} />
-                     <span className="text-[11px] font-black uppercase tracking-[0.3em]">Archival Date</span>
-                  </div>
-                  <p className="text-xl font-black text-black uppercase tracking-tighter">{new Date(item.created_at).toLocaleDateString()}</p>
-               </div>
-               <div className="p-10 bg-white border border-zinc-100 rounded-3xl shadow-xl shadow-zinc-200/30 flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-4 mb-6 text-zinc-300">
-                       <Users size={20} />
-                       <span className="text-[11px] font-black uppercase tracking-[0.3em]">Status Hub</span>
-                    </div>
-                    <Badge status={item.approval_status} className="rounded-full" />
-                  </div>
-               </div>
+          <div className="space-y-12 pb-20 animate-enter">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="p-8 border border-zinc-200 bg-white space-y-4">
+                <div className="flex items-center gap-2 text-zinc-400">
+                  <Bookmark size={16} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Type</span>
+                </div>
+                <p className="text-sm font-black text-black uppercase">{type ? TYPE_LABELS[type] : "—"}</p>
+              </div>
+              <div className="p-8 border border-zinc-200 bg-white space-y-4">
+                <div className="flex items-center gap-2 text-zinc-400">
+                  <Calendar size={16} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Year</span>
+                </div>
+                <p className="text-sm font-black text-black">
+                  {item.publication_year ?? new Date(item.created_at).getFullYear()}
+                </p>
+              </div>
+              <div className="p-8 border border-zinc-200 bg-white space-y-4 lg:col-span-2">
+                <div className="flex items-center gap-2 text-zinc-400">
+                  <Users size={16} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Authors</span>
+                </div>
+                <p className="text-sm font-black text-black uppercase line-clamp-2">{item.authors || "—"}</p>
+              </div>
             </div>
 
-            {(details && details.link) && (
-              <div className="p-14 bg-zinc-900 text-white flex flex-col md:flex-row items-center justify-between gap-12 rounded-[2.5rem] shadow-2xl shadow-zinc-900/20 relative overflow-hidden group">
-                 <div className="flex items-center gap-10 relative z-10">
-                    <div className="p-6 bg-white/10 rounded-3xl backdrop-blur-md">
-                       <FileStack size={48} className="text-white opacity-80" />
-                    </div>
-                    <div>
-                       <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40 mb-3">Live Experimental Node</h4>
-                       <p className="text-3xl font-black tracking-tighter uppercase leading-none">Verify Output Registry</p>
-                    </div>
-                 </div>
-                 <a href={details.link} target="_blank" rel="noopener noreferrer" className="relative z-10 px-14 py-5 bg-white text-zinc-900 text-[12px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-zinc-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-4 shadow-2xl">
-                   Open document <Globe size={20} />
-                 </a>
-                 <div className="absolute -right-20 -bottom-20 opacity-5 group-hover:scale-110 transition-transform duration-1000 rotate-12">
-                   <Bookmark size={240} />
-                 </div>
+            {details && (
+              <div className="p-8 border border-black bg-zinc-50 space-y-2">
+                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">
+                  {type === "ARTICLE" ? "Digital Object Identifier (DOI)" :
+                   type === "BOOK" ? "International Standard Book Number (ISBN)" :
+                   type === "JOURNAL" ? "International Standard Serial Number (ISSN)" :
+                   "Subtype Identifier"}
+                </p>
+                <p className="text-lg font-black text-black tracking-tight uppercase">
+                  {type === "ARTICLE" ? details.doi :
+                   type === "BOOK" ? details.isbn :
+                   type === "JOURNAL" ? details.issn :
+                   details.paper_id}
+                </p>
               </div>
             )}
 
-            <div className="space-y-10">
-               <h4 className="text-[14px] font-black text-black uppercase tracking-[0.5em] flex items-center gap-4 border-b border-zinc-100 pb-4 w-fit">
-                 <Info size={20} className="text-zinc-900" /> Registry Abstract
-               </h4>
-               <div className="p-14 bg-zinc-50/50 border border-zinc-100 text-zinc-600 leading-relaxed font-medium italic text-lg rounded-[2.5rem] shadow-inner">
-                 {details?.description || "No technical abstract associated with this record. Review the linked primary document for baseline metadata."}
-               </div>
-            </div>
+            {details?.description && (
+              <div className="space-y-6">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 flex items-center gap-2">
+                  <Info size={14} /> Abstract / Scope
+                </h4>
+                <p className="text-sm font-bold text-black uppercase leading-loose tracking-tight whitespace-pre-wrap italic">
+                  {details.description}
+                </p>
+              </div>
+            )}
+
+            {details?.link && (
+              <div className="pt-6 border-t border-zinc-100">
+                <Button
+                  onClick={() => window.open(details.link, '_blank')}
+                  variant="outline"
+                  className="h-12 px-8 text-[11px] font-black tracking-widest uppercase"
+                >
+                  <ExternalLink size={16} className="mr-2" /> View external link
+                </Button>
+              </div>
+            )}
           </div>
         );
       }}
-      renderEdit={(item, setItem) => (
-        <div className="space-y-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            <FormField label="Identifier Label" full>
-              <FormInput placeholder="Registry Title identification..." value={item.title || ""} onChange={e => setItem({ ...item, title: e.target.value })} className="rounded-2xl" />
-            </FormField>
-            
-            <FormField label="Asset Specialization">
-              <FormSelect 
-                value={item.type || ""} 
-                onChange={e => setItem({ ...item, type: e.target.value as PublicationType })}
-                className="rounded-2xl"
-                options={[
-                  { label: "SELECT TYPE Node...", value: "" },
-                  { label: "JOURNAL ARTICLE", value: "ARTICLE" },
-                  { label: "CONFERENCE PAPER", value: "CONFERENCE" },
-                  { label: "ACADEMIC BOOK", value: "BOOK" },
-                  { label: "RESEARCH JOURNAL", value: "JOURNAL" },
-                ]}
+      renderEdit={(item, setItem) => {
+        const type = item.type;
+        const key = type ? subtypeKey(type) : null;
+        const subtypeData = (key && (item as any)[key]) ? (item as any)[key] : {};
+
+        const setSubtype = (patch: Record<string, string>) =>
+          setItem({ ...item, [key!]: { ...subtypeData, ...patch } });
+
+        return (
+          <div className="space-y-10">
+            <Input
+              label="Title"
+              placeholder="Enter publication title..."
+              value={item.title ?? ""}
+              onChange={e => setItem({ ...item, title: e.target.value })}
+            />
+
+            <Input
+              label="Authors"
+              placeholder="Names, comma-separated..."
+              value={item.authors ?? ""}
+              onChange={e => setItem({ ...item, authors: e.target.value })}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <Input
+                label="Publication Year"
+                type="number"
+                placeholder={String(new Date().getFullYear())}
+                value={item.publication_year ?? ""}
+                onChange={e => setItem({ ...item, publication_year: Number(e.target.value) })}
               />
-            </FormField>
 
-            <FormField label="Registry Authorization" full={isUserAdmin}>
-              <FormSelect 
-                value={item.approval_status || "PENDING"} 
-                onChange={e => setItem({ ...item, approval_status: e.target.value as ApprovalStatus })}
-                className="rounded-2xl"
-                options={[
-                  { label: "PENDING MODERATION Cluster", value: "PENDING" },
-                  ...(isUserAdmin ? [{ label: "AUTHORIZE ENTRY Node", value: "APPROVED" }, { label: "INVALITATE ENTRY Node", value: "REJECTED" }] : [])
-                ]}
-              />
-            </FormField>
-          </div>
-
-          {item.type && (
-            <div className="pt-16 border-t border-zinc-100 space-y-12 animate-in fade-in slide-in-from-top-8 duration-700">
-              <div className="flex items-center gap-5">
-                 <Badge status="APPROVED" children={item.type} className="rounded-full px-6" />
-                 <span className="text-[11px] font-black text-zinc-300 uppercase tracking-[0.4em]">Subsystem logic initialized</span>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                 {item.type === "ARTICLE" && (
-                    <FormField label="DOI Index Matrix" full>
-                       <FormInput placeholder="10.xxxx/xxxx identification..." value={item.article?.doi || ""} onChange={e => setItem({ ...item, article: { ...item.article, doi: e.target.value } })} className="rounded-2xl" />
-                    </FormField>
-                 )}
-                 {item.type === "BOOK" && (
-                    <FormField label="ISBN Index Matrix" full>
-                       <FormInput placeholder="978-x... identification..." value={item.book?.isbn || ""} onChange={e => setItem({ ...item, book: { ...item.book, isbn: e.target.value } })} className="rounded-2xl" />
-                    </FormField>
-                 )}
-                 {item.type === "JOURNAL" && (
-                    <FormField label="ISSN Index Matrix" full>
-                       <FormInput placeholder="xxxx-xxxx identification..." value={item.journal?.issn || ""} onChange={e => setItem({ ...item, journal: { ...item.journal, issn: e.target.value } })} className="rounded-2xl" />
-                    </FormField>
-                 )}
-                 {item.type === "CONFERENCE" && (
-                    <FormField label="Paper Logic ID" full>
-                       <FormInput placeholder="e.g. NeurIPS-2026-001 identify..." value={item.conference_paper?.paper_id || ""} onChange={e => setItem({ ...item, conference_paper: { ...item.conference_paper, paper_id: e.target.value } })} className="rounded-2xl" />
-                    </FormField>
-                 )}
-
-                 <FormField label="Remote Repository Link" full>
-                    <FormInput placeholder="https://external-node-id..." value={(item as any)[item.type === 'CONFERENCE' ? 'conference_paper' : item.type.toLowerCase()]?.link || ""} onChange={e => {
-                       const key = item.type === 'CONFERENCE' ? 'conference_paper' : item.type?.toLowerCase();
-                       if (!key) return;
-                       setItem({ ...item, [key]: { ...(item as any)[key], link: e.target.value } });
-                    }} className="rounded-2xl" />
-                 </FormField>
-
-                 <FormField label="Detailed Archive Abstract" full>
-                    <FormTextArea className="min-h-[220px] rounded-3xl" placeholder="Full technical abstract node..." value={(item as any)[item.type === 'CONFERENCE' ? 'conference_paper' : item.type.toLowerCase()]?.description || ""} onChange={e => {
-                       const key = item.type === 'CONFERENCE' ? 'conference_paper' : item.type?.toLowerCase();
-                       if (!key) return;
-                       setItem({ ...item, [key]: { ...(item as any)[key], description: e.target.value } });
-                    }} />
-                 </FormField>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold uppercase tracking-tight text-zinc-600">
+                  Publication Type
+                </label>
+                <select
+                  value={item.type ?? ""}
+                  onChange={e => setItem({ ...item, type: e.target.value as PublicationType })}
+                  className="input-monochrome focus:ring-1 focus:ring-black appearance-none cursor-pointer"
+                >
+                  <option value="">-- Select type --</option>
+                  <option value="ARTICLE">RESEARCH ARTICLE</option>
+                  <option value="CONFERENCE">CONFERENCE PAPER</option>
+                  <option value="BOOK">ACADEMIC BOOK</option>
+                  <option value="JOURNAL">JOURNAL PERIODICAL</option>
+                </select>
               </div>
             </div>
-          )}
-        </div>
-      )}
+
+            {type && key && (
+              <div className="pt-10 border-t border-zinc-100 space-y-10 animate-enter">
+                <Input
+                  label={type === "ARTICLE" ? "DOI" : type === "BOOK" ? "ISBN" : type === "JOURNAL" ? "ISSN" : "Paper ID"}
+                  placeholder="Enter identifier..."
+                  value={(type === "ARTICLE" ? subtypeData.doi : type === "BOOK" ? subtypeData.isbn : type === "JOURNAL" ? subtypeData.issn : subtypeData.paper_id) ?? ""}
+                  onChange={e => setSubtype({ [type === "ARTICLE" ? 'doi' : type === "BOOK" ? 'isbn' : type === "JOURNAL" ? 'issn' : 'paper_id']: e.target.value })}
+                />
+
+                <Input
+                  label="URL / Link"
+                  placeholder="https://doi.org/..."
+                  value={subtypeData.link ?? ""}
+                  onChange={e => setSubtype({ link: e.target.value })}
+                />
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-tight text-zinc-600">
+                    Abstract / Description
+                  </label>
+                  <textarea
+                    className="input-monochrome min-h-[160px] py-4"
+                    placeholder="Brief abstract or description..."
+                    value={subtypeData.description ?? ""}
+                    onChange={e => setSubtype({ description: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }}
     />
   );
 }

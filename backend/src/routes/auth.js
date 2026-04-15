@@ -16,6 +16,7 @@ const RegisterSchema = z.object({
   role:          z.enum(['researcher', 'research_assistant']),
 });
 
+
 const LoginSchema = z.object({
   email:    z.string().email(),
   password: z.string().min(1),
@@ -37,9 +38,10 @@ authRouter.post('/register', async (req, res) => {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
 
-  const { first_name, second_name, contact_email, password, role } = parsed.data;
+  const { first_name, second_name, contact_email, password, role, assigned_by_researcher_id } = parsed.data;
 
   // 1. Create Supabase Auth user
+  // ... (unchanged)
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email: contact_email,
     password,
@@ -69,20 +71,16 @@ authRouter.post('/register', async (req, res) => {
   if (memberError) {
     console.error('[RegistrationError] Member Insert:', memberError);
     await supabase.auth.admin.deleteUser(authUserId);
-    
-    // User-friendly error mapping
-    if (memberError.code === '42501') return res.status(500).json({ error: 'Server configuration error (Security policy). Please contact admin.' });
-    if (memberError.code === '23505') return res.status(409).json({ error: 'Email or identity already exists in system.' });
-    
-    return res.status(500).json({ error: 'An unexpected error occurred during profile creation.' });
+    return res.status(500).json({ error: 'Failed to create member profile.' });
   }
 
-  // 4. Insert role-specific row (approval_status defaults to PENDING)
+  // 4. Insert role-specific row
   const roleTable = role === 'researcher' ? 'researcher' : 'research_assistant';
-  const { error: roleError } = await supabase
-    .from(roleTable)
-    .insert({ member_id: member.id });
+  const roleData = role === 'research_assistant'
+    ? { member_id: member.id, assigned_by_researcher_id: null, approval_status: 'PENDING_ADMIN' }
+    : { member_id: member.id };
 
+  const { error: roleError } = await supabase.from(roleTable).insert(roleData);
   if (roleError) {
     console.error('[RegistrationError] Role Insert:', roleError);
     await supabase.auth.admin.deleteUser(authUserId);
@@ -93,6 +91,7 @@ authRouter.post('/register', async (req, res) => {
     message: 'Registration successful. Your account is pending admin approval.',
     memberId: member.id,
   });
+
 });
 
 // ─── POST /auth/login ─────────────────────────────────────────────────────────
@@ -124,9 +123,25 @@ authRouter.post('/login', async (req, res) => {
   }
 
   const { member, role, roleRow } = memberData;
-  const isPendingOrRejected = roleRow?.approval_status === 'PENDING' || roleRow?.approval_status === 'REJECTED';
 
-  // 3. Handle status-based access (Admins are implicitly approved)
+  // 3. Handle status-based access
+  if (role === 'pending_setup') {
+    // RA who hasn't selected a supervisor yet — allow login but mark as pending_setup
+    const token = signToken({ sub: member.id, role: 'pending_setup', email: member.contact_email, slug: member.slug });
+    return res.json({
+      token,
+      user: {
+        id: member.id,
+        first_name: member.first_name,
+        second_name: member.second_name,
+        email: member.contact_email,
+        slug: member.slug,
+        role: 'pending_setup',
+        approval_status: null,
+      },
+    });
+  }
+
   if (role !== 'admin' && roleRow?.approval_status === 'REJECTED') {
     return res.status(403).json({ error: 'Account access denied. Your application was rejected.' });
   }
@@ -149,6 +164,7 @@ authRouter.post('/login', async (req, res) => {
       slug:          member.slug,
       role,
       approval_status: role === 'admin' ? null : roleRow?.approval_status,
+      assigned_by_researcher_id: role === 'research_assistant' ? (roleRow?.assigned_by_researcher_id ?? null) : undefined,
     },
   });
 });

@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
-import { FlaskConical, Link as LinkIcon, ExternalLink, ShieldCheck, Hash, Info, ArrowRight } from "lucide-react";
+import { FlaskConical, ArrowRight, ImageIcon } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { api, type Project, type ApprovalStatus } from "../../lib/api";
+import { api } from "../../api";
+import type { Project, ApprovalStatus } from "../../types";
 import { ContentPageTemplate } from "../../components/shared/ContentPageTemplate";
-import { FormField, FormInput, FormTextArea, FormSelect } from "../../components/shared/FormElements";
-import { Badge } from "../../components/shared/UIPrimitives";
+import { Input } from "../../components/ui/Input";
+import { Badge } from "../../components/ui/Badge";
+import { MarkdownEditor } from "../../components/ui/MarkdownEditor";
+import { AttachmentList } from "../../components/ui/AttachmentList";
+import { renderMarkdown } from "../../lib/utils/markdown";
 
 export default function ProjectsPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isResearcher } = useAuth();
   const [items, setItems] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const isUserAdmin = isAdmin();
 
   const fetchItems = async () => {
     try {
@@ -28,13 +31,23 @@ export default function ProjectsPage() {
   const emptyItem: Partial<Project> = {
     title: "",
     description: "",
-    link: "",
-    approval_status: "PENDING" as ApprovalStatus,
+    content: "",
+    approval_status: "DRAFT" as ApprovalStatus,
   };
 
   const handleSave = async (item: Partial<Project>) => {
     if (item.id) await api.projects.update(item.id as number, item);
     else await api.projects.create(item);
+    await fetchItems();
+  };
+
+  const handleSubmitForReview = async (item: Project) => {
+    await api.content.submit("project", item.id);
+    await fetchItems();
+  };
+
+  const handleReview = async (item: Project, status: 'PENDING_ADMIN' | 'REJECTED') => {
+    await api.content.review("project", item.id, status);
     await fetchItems();
   };
 
@@ -48,103 +61,137 @@ export default function ProjectsPage() {
   return (
     <ContentPageTemplate<Project>
       title="Projects"
-      subtitle={`${items.length} active experimental nodes indexed in the professional registry.`}
+      subtitle={`${items.length} project${items.length !== 1 ? "s" : ""}.`}
       icon={FlaskConical}
       items={items}
       loading={loading}
-      isAdmin={isUserAdmin}
+      isAdmin={isAdmin()}
+      isResearcher={isResearcher()}
       emptyItem={emptyItem}
       onSave={handleSave}
-      onToggleStatus={isUserAdmin ? handleToggleStatus : undefined}
-      searchFields={(item) => [item.title, item.description]}
+      onSubmitForReview={handleSubmitForReview}
+      onReview={handleReview}
+      onToggleStatus={isAdmin() ? handleToggleStatus : undefined}
+      searchFields={item => [item.title, item.description || ""]}
       filterOptions={[
-        { label: "ALL PROJECTS", value: "ALL" },
-        { label: "ACTIVE HUB", value: "APPROVED" },
-        { label: "PENDING NODE", value: "PENDING" },
+        { label: "All", value: "ALL" },
+        { label: "Published", value: "APPROVED" },
+        { label: "Pending", value: "PENDING_ADMIN" },
+        { label: "Draft", value: "DRAFT" },
       ]}
       renderListItem={(item, onClick) => (
-        <article key={item.id} onClick={onClick} className="group relative bg-white border border-zinc-100 p-10 hover:shadow-2xl hover:shadow-zinc-200/50 transition-all duration-500 cursor-pointer flex flex-col gap-8 rounded-3xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-           <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                 <div className="p-2.5 bg-zinc-900 text-white rounded-xl shadow-lg opacity-90">
-                    <FlaskConical size={18} />
-                 </div>
-                 <span className="text-[11px] font-black uppercase tracking-[0.25em] text-zinc-900 border-b-2 border-zinc-900 pb-0.5">
-                    INITIATIVE NODE
-                 </span>
+        <div
+          key={item.id}
+          onClick={onClick}
+          className="group bg-white border border-zinc-200 hover:border-zinc-300 hover:shadow-lg hover:shadow-zinc-100 rounded-2xl p-5 cursor-pointer flex flex-col gap-3 transition-all duration-200"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-center">
+                <FlaskConical size={14} className="text-zinc-600" />
               </div>
-              <Badge status={item.approval_status} className="rounded-full" />
-           </div>
-           <div className="flex-1 min-w-0">
-              <h3 className="text-2xl font-black text-zinc-900 leading-tight group-hover:text-black transition-all line-clamp-2 uppercase tracking-tighter">{item.title}</h3>
-              <p className="text-[11px] text-zinc-400 font-bold uppercase tracking-[0.2em] mt-6 flex items-center gap-3 bg-zinc-50 px-4 py-2 rounded-full w-fit border border-zinc-100 italic">
-                <Hash size={13} /> PRJ-0X{item.id?.toString().slice(-4).toUpperCase()}
-              </p>
-           </div>
-           <div className="pt-8 border-t border-zinc-50 flex items-center justify-between">
-              <div className="text-[10px] font-black text-zinc-300 uppercase tracking-widest translate-x-2 group-hover:translate-x-0 transition-all opacity-0 group-hover:opacity-100 flex items-center gap-2">
-                 Inspect Logic <ArrowRight size={12} />
-              </div>
-           </div>
-        </article>
-      )}
-      renderDetail={(item) => (
-        <div className="space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-               <div className="p-10 bg-white border border-zinc-100 rounded-3xl shadow-xl shadow-zinc-200/30">
-                  <div className="flex items-center gap-4 mb-6 text-zinc-300">
-                     <ShieldCheck size={20} />
-                     <span className="text-[11px] font-black uppercase tracking-[0.3em]">Governance State</span>
-                  </div>
-                  <p className="text-xl font-black text-black uppercase tracking-tighter">{item.approval_status}</p>
-               </div>
-               <div className="p-10 bg-white border border-zinc-100 rounded-3xl shadow-xl shadow-zinc-200/30">
-                  <div className="flex items-center gap-4 mb-6 text-zinc-300">
-                     <LinkIcon size={20} />
-                     <span className="text-[11px] font-black uppercase tracking-[0.3em]">Deployment Status</span>
-                  </div>
-                  <p className="text-xl font-black text-black uppercase tracking-tighter">{item.link ? "External Dispatch" : "Internal Node"}</p>
-               </div>
+              <span className="text-xs font-medium text-zinc-400">Project</span>
             </div>
+            <Badge status={item.approval_status} />
+          </div>
 
-            <div className="space-y-10">
-               <h4 className="text-[14px] font-black text-black uppercase tracking-[0.5em] flex items-center gap-4 border-b border-zinc-100 pb-4 w-fit">
-                 <Info size={20} className="text-zinc-900" /> Technical Vision
-               </h4>
-               <div className="p-14 bg-zinc-50/50 border border-zinc-100 text-zinc-600 leading-relaxed font-medium italic text-lg rounded-[2.5rem] shadow-inner">
-                 {item.description || "No technical vision node associated with this project identity Archive cluster."}
-               </div>
-            </div>
-
-            {item.link && (
-               <div className="flex items-center justify-center pt-8">
-                  <a href={item.link} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-6 px-12 py-6 bg-zinc-900 text-white text-[13px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-black transition-all shadow-2xl shadow-zinc-900/20 active:scale-95">
-                    <ExternalLink size={20} className="group-hover:rotate-12 transition-transform" /> Execute Deployment Logic
-                  </a>
-               </div>
+          <div className="space-y-1.5">
+            <h3 className="text-sm font-semibold text-zinc-900 leading-snug line-clamp-2">{item.title}</h3>
+            {item.description && (
+              <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">{item.description}</p>
             )}
+          </div>
+
+          {(item.diagrams ?? []).length > 0 && (
+            <div className="flex items-center gap-1 text-[10px] text-zinc-400">
+              <ImageIcon size={10} />
+              <span>{item.diagrams!.length} diagram{item.diagrams!.length !== 1 ? "s" : ""}</span>
+            </div>
+          )}
+
+          <div className="pt-3 border-t border-zinc-100 flex items-center justify-between">
+            <span className="text-xs font-medium text-zinc-500 flex items-center gap-1.5">
+              View project
+            </span>
+            <ArrowRight size={13} className="text-zinc-300 group-hover:text-zinc-600 group-hover:translate-x-0.5 transition-all" />
+          </div>
+        </div>
+      )}
+      renderDetail={item => (
+        <div className="space-y-8 pb-20 animate-enter">
+          {item.description && (
+            <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-100 text-sm text-zinc-900 italic font-medium leading-relaxed">
+              "{item.description}"
+            </div>
+          )}
+
+          {(item.diagrams ?? []).length > 0 && (
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Diagrams</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {item.diagrams!.map(d => (
+                  <a
+                    key={d.id}
+                    href={d.diagram_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-xs text-zinc-700 hover:border-zinc-200 hover:bg-zinc-50 transition-all"
+                  >
+                    <ImageIcon size={12} className="text-zinc-500 shrink-0" />
+                    <span className="truncate">{d.diagram_url}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="prose max-w-none">
+            <div className="markdown-monochrome">{renderMarkdown(item.content || "")}</div>
+          </div>
         </div>
       )}
       renderEdit={(item, setItem) => (
-        <div className="space-y-16">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-               <FormField label="Identifier Identification" full><FormInput placeholder="Registry Title Identification node..." value={item.title} onChange={e => setItem({...item, title: e.target.value})} className="rounded-2xl" /></FormField>
-               <FormField label="Remote Deployment / Source URL" full><FormInput placeholder="https://external-node-id..." value={item.link} onChange={e => setItem({...item, link: e.target.value})} className="rounded-2xl" /></FormField>
-               
-               <FormField label="Registry Status Hub" full={isUserAdmin}>
-                  <FormSelect 
-                    value={item.approval_status || "PENDING"} 
-                    onChange={e => setItem({ ...item, approval_status: e.target.value as ApprovalStatus })}
-                    className="rounded-2xl"
-                    options={[
-                      { label: "PENDING MODERATION Cluster", value: "PENDING" },
-                      ...(isUserAdmin ? [{ label: "AUTHORIZE NODE Cluster", value: "APPROVED" }, { label: "INVALIDATE NODE Cluster", value: "REJECTED" }] : [])
-                    ]}
-                  />
-               </FormField>
+        <div className="space-y-8">
+          <Input
+            label="Project Title"
+            placeholder="Enter project title..."
+            value={item.title ?? ""}
+            onChange={e => setItem({ ...item, title: e.target.value })}
+          />
 
-               <FormField label="Technical Architectural Vision" full><FormTextArea className="min-h-[220px] rounded-3xl" placeholder="Full project architectural context..." value={item.description} onChange={e => setItem({...item, description: e.target.value})} /></FormField>
-            </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Summary</label>
+            <textarea
+              className="input-monochrome min-h-[80px] py-3"
+              placeholder="Describe the project goals and scope..."
+              value={item.description ?? ""}
+              onChange={e => setItem({ ...item, description: e.target.value })}
+            />
+          </div>
+
+          <MarkdownEditor
+            label="Content"
+            value={item.content ?? ""}
+            onChange={val => setItem({ ...item, content: val })}
+          />
+
+          {item.id && (
+            <AttachmentList
+              label="Diagrams"
+              icon="link"
+              items={item.diagrams ?? []}
+              displayKey="diagram_url"
+              inputPlaceholder="https://example.com/diagram.png"
+              onAdd={async (url) => {
+                await api.projects.addDiagram(item.id as number, url);
+                await fetchItems();
+              }}
+              onRemove={async (diagId) => {
+                await api.projects.removeDiagram(item.id as number, diagId);
+                await fetchItems();
+              }}
+            />
+          )}
         </div>
       )}
     />

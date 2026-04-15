@@ -1,140 +1,247 @@
-import { useState, useEffect } from "react";
-import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
-  BookOpen,
-  FileText,
-  FlaskConical,
-  CalendarDays,
-  Users,
-  LogOut,
-  Menu,
-  Bell,
-  Briefcase,
-  GraduationCap,
-  Settings,
-  HelpCircle,
-  UserCircle,
-  Search,
-  X,
-  AlertCircle
+  LayoutDashboard, BookOpen, FileText, FlaskConical,
+  CalendarDays, Users, LogOut, Briefcase, GraduationCap,
+  Settings, UserCircle, Menu, Bell, X, ArrowRight,
+  CheckCircle2, XCircle, Clock, ChevronRight,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { cn } from "../../lib/utils";
-import { MinimalCard, FunctionalButton } from "../shared/UIPrimitives";
+import { useSessionTimeout } from "../../hooks/useSessionTimeout";
+import { api } from "../../api";
+import type { BaseMember } from "../../types";
+import { Link } from "react-router-dom";
 
-const navItems = [
-  { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard, roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Publications", path: "/publications", icon: BookOpen, roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Blog Posts", path: "/blog", icon: FileText, roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Projects", path: "/projects", icon: FlaskConical, roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Events", path: "/events", icon: CalendarDays, roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Grants", path: "/grants", icon: Briefcase, roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Tutorials", path: "/tutorials", icon: GraduationCap, roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Members", path: "/dashboard/members", icon: Users, roles: ["admin"] },
+// ── Nav config ────────────────────────────────────────────────────────────────
+
+const mainNav = [
+  { label: "Dashboard",    path: "/dashboard",        icon: LayoutDashboard, roles: ["admin", "researcher", "research_assistant"] },
+  { label: "Publications", path: "/publications",      icon: BookOpen,        roles: ["admin", "researcher", "research_assistant"] },
+  { label: "Blog",         path: "/blog",              icon: FileText,        roles: ["admin", "researcher", "research_assistant"] },
+  { label: "Projects",     path: "/projects",          icon: FlaskConical,    roles: ["admin", "researcher", "research_assistant"] },
+  { label: "Events",       path: "/events",            icon: CalendarDays,    roles: ["admin", "researcher"] },
+  { label: "Grants",       path: "/grants",            icon: Briefcase,       roles: ["admin", "researcher"] },
+  { label: "Tutorials",    path: "/tutorials",         icon: GraduationCap,   roles: ["admin", "researcher", "research_assistant"] },
+  { label: "Members",      path: "/dashboard/members", icon: Users,           roles: ["admin"] },
 ] as const;
 
-const otherNavItems = [
-  { label: "Account", path: "/account", icon: UserCircle, roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Settings", path: "/settings", icon: Settings, roles: ["admin", "researcher", "research_assistant"] },
-  { label: "Help", path: "/help", icon: HelpCircle, roles: ["admin", "researcher", "research_assistant"] },
+const settingsNav = [
+  { label: "Profile",  path: "/account",  icon: UserCircle, roles: ["admin", "researcher", "research_assistant"] },
+  { label: "Settings", path: "/settings", icon: Settings,   roles: ["admin", "researcher", "research_assistant"] },
 ] as const;
+
+// ── Notification types ────────────────────────────────────────────────────────
+
+interface Notification {
+  id: string;
+  kind: "member_request" | "pending_content";
+  title: string;
+  subtitle: string;
+  href: string;
+  memberId?: number;
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export function AppLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showLogOutConfirm, setShowLogOutConfirm] = useState(false);
 
-  useEffect(() => {
-    document.title = "BrAIN Labs - Workspace";
-  }, []);
+  // Notifications
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [approvingId, setApprovingId] = useState<number | null>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     navigate("/login");
+  }, [logout, navigate]);
+
+  useSessionTimeout(handleLogout);
+
+  // ── Fetch notifications ──────────────────────────────────────────────────────
+
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return;
+    setNotifLoading(true);
+    try {
+      const notifs: Notification[] = [];
+
+      if (user.role === "admin") {
+        const [members, pubs, blogs, events, projects] = await Promise.all([
+          api.admin.getMembers(),
+          api.publications.list(),
+          api.blogs.list(),
+          api.events.list(),
+          api.projects.list(),
+        ]);
+
+        // Pending member registrations
+        (members as BaseMember[])
+          .filter(m => m.approval_status === "PENDING_ADMIN")
+          .forEach(m => notifs.push({
+            id: `member-${m.id}`,
+            kind: "member_request",
+            title: `${m.first_name} ${m.second_name}`,
+            subtitle: `${m.role.replace("_", " ")} · Registration request`,
+            href: "/dashboard/members",
+            memberId: m.id,
+          }));
+
+        // Pending content approval
+        const contentPending = [
+          ...pubs.filter((p: any) => p.approval_status === "PENDING_ADMIN").map((p: any) => ({
+            id: `pub-${p.id}`, kind: "pending_content" as const,
+            title: p.title, subtitle: "Publication · Awaiting approval", href: "/publications",
+          })),
+          ...blogs.filter((b: any) => b.approval_status === "PENDING_ADMIN").map((b: any) => ({
+            id: `blog-${b.id}`, kind: "pending_content" as const,
+            title: b.title, subtitle: "Blog post · Awaiting approval", href: "/blog",
+          })),
+          ...events.filter((e: any) => e.approval_status === "PENDING_ADMIN").map((e: any) => ({
+            id: `event-${e.id}`, kind: "pending_content" as const,
+            title: e.title, subtitle: "Event · Awaiting approval", href: "/events",
+          })),
+          ...projects.filter((p: any) => p.approval_status === "PENDING_ADMIN").map((p: any) => ({
+            id: `proj-${p.id}`, kind: "pending_content" as const,
+            title: p.title ?? "Untitled project", subtitle: "Project · Awaiting approval", href: "/projects",
+          })),
+        ];
+        notifs.push(...contentPending);
+      }
+
+      if (user.role === "researcher") {
+        const [pubs, projects] = await Promise.all([
+          api.publications.list(),
+          api.projects.list(),
+        ]);
+        pubs.filter((p: any) => p.approval_status === "PENDING_RESEARCHER").forEach((p: any) =>
+          notifs.push({ id: `rpub-${p.id}`, kind: "pending_content", title: p.title, subtitle: "Publication · Needs your review", href: "/publications" })
+        );
+        projects.filter((p: any) => p.approval_status === "PENDING_RESEARCHER").forEach((p: any) =>
+          notifs.push({ id: `rproj-${p.id}`, kind: "pending_content", title: p.title, subtitle: "Project · Needs your review", href: "/projects" })
+        );
+      }
+
+      setNotifications(notifs);
+    } catch (e) {
+      console.error("Failed to fetch notifications", e);
+    } finally {
+      setNotifLoading(false);
+    }
+  }, [user]);
+
+  // Fetch on mount and every 60 seconds
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60_000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
+  // Close notif panel when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // ── Quick-approve a member from notification panel ───────────────────────────
+
+  const handleApprove = async (memberId: number) => {
+    setApprovingId(memberId);
+    try {
+      await api.admin.approveMember(memberId);
+      await fetchNotifications();
+    } catch (e) {
+      console.error("Approval failed", e);
+    } finally {
+      setApprovingId(null);
+    }
   };
 
-  const filteredNav = navItems.filter((item) =>
+  const handleReject = async (memberId: number) => {
+    setApprovingId(memberId);
+    try {
+      await api.admin.rejectMember(memberId);
+      await fetchNotifications();
+    } catch (e) {
+      console.error("Rejection failed", e);
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
+  // ── Nav helpers ───────────────────────────────────────────────────────────────
+
+  const filteredMain = mainNav.filter(item =>
+    user ? item.roles.includes(user.role as never) : false
+  );
+  const filteredSettings = settingsNav.filter(item =>
     user ? item.roles.includes(user.role as never) : false
   );
 
-  const filteredOtherNav = otherNavItems.filter((item) =>
-    user ? item.roles.includes(user.role as never) : false
-  );
+  const navClass = ({ isActive }: { isActive: boolean }) =>
+    `nav-item ${isActive ? 'active' : ''}`;
+
+  const unreadCount = notifications.length;
+
+  // ── Sidebar ───────────────────────────────────────────────────────────────────
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-white border-r border-zinc-100 shadow-2xl shadow-zinc-200/50">
-      <div className="p-10 border-b border-zinc-50 bg-zinc-50/30">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center shadow-2xl shadow-zinc-900/20">
-            <img src="/logo.png" alt="Logo" className="w-7 h-7 invert" />
-          </div>
-          <div>
-            <p className="font-black text-[14px] text-zinc-900 uppercase tracking-tighter leading-none">BrAIN Labs</p>
-            <p className="text-[11px] text-zinc-400 font-bold uppercase mt-1.5 opacity-60 tracking-[0.2em] leading-none">System Node</p>
-          </div>
+    <div className="flex flex-col h-full bg-white border-r border-zinc-100/80 px-3 py-5">
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-2 mb-7">
+        <div className="w-8 h-8 rounded-xl bg-zinc-900 flex items-center justify-center shrink-0">
+          <img src="/logo.png" alt="" className="w-4.5 h-4.5 object-contain invert" />
+        </div>
+        <div>
+          <p className="text-[13px] font-bold text-zinc-900 leading-none">BrAIN Labs</p>
+          <p className="text-[10px] text-zinc-400 mt-0.5">
+            {user?.role === "admin" ? "Admin Portal" : user?.role === "researcher" ? "Research Portal" : "Lab Portal"}
+          </p>
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-6 py-10 space-y-12">
-        <div className="space-y-2">
-          <p className="px-4 text-[11px] font-black text-zinc-300 uppercase tracking-[0.4em] mb-4">Registry Control</p>
-          {filteredNav.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={() => setMobileOpen(false)}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-4 px-4 py-3 rounded-2xl text-[13px] font-bold tracking-tight transition-all duration-300",
-                  isActive 
-                    ? "bg-zinc-900 text-white shadow-2xl shadow-zinc-900/20 translate-x-1" 
-                    : "text-zinc-500 hover:text-black hover:bg-zinc-50"
-                )
-              }
-            >
-              <item.icon size={18} />
-              {item.label}
+      {/* Main nav */}
+      <nav className="flex-1 overflow-y-auto space-y-5">
+        <div className="space-y-0.5">
+          <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest px-3 mb-2">Navigation</p>
+          {filteredMain.map(item => (
+            <NavLink key={item.path} to={item.path} onClick={() => setMobileOpen(false)} className={navClass}>
+              <item.icon size={15} />
+              <span>{item.label}</span>
             </NavLink>
           ))}
         </div>
-
-        <div className="space-y-2">
-          <p className="px-4 text-[11px] font-black text-zinc-300 uppercase tracking-[0.4em] mb-4">Operations Hub</p>
-          {filteredOtherNav.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={() => setMobileOpen(false)}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-4 px-4 py-3 rounded-2xl text-[13px] font-bold tracking-tight transition-all duration-300",
-                  isActive 
-                    ? "bg-zinc-900 text-white shadow-2xl shadow-zinc-900/20 translate-x-1" 
-                    : "text-zinc-500 hover:text-black hover:bg-zinc-50"
-                )
-              }
-            >
-              <item.icon size={18} />
-              {item.label}
+        <div className="space-y-0.5">
+          <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest px-3 mb-2">Account</p>
+          {filteredSettings.map(item => (
+            <NavLink key={item.path} to={item.path} onClick={() => setMobileOpen(false)} className={navClass}>
+              <item.icon size={15} />
+              <span>{item.label}</span>
             </NavLink>
           ))}
         </div>
       </nav>
 
-      <div className="p-8 border-t border-zinc-50 bg-zinc-50/20">
-        <div className="flex items-center gap-4 p-4 bg-white border border-zinc-100 rounded-3xl shadow-xl shadow-zinc-200/40">
-          <div className="w-11 h-11 rounded-2xl bg-zinc-900 flex items-center justify-center text-[13px] font-black text-white shadow-lg shadow-zinc-900/10">
-            {user?.role?.slice(0, 1).toUpperCase()}
+      {/* User footer */}
+      <div className="border-t border-zinc-100 pt-4 mt-4">
+        <div className="flex items-center gap-3 px-2">
+          <div className="w-8 h-8 rounded-xl bg-zinc-900 flex items-center justify-center text-[11px] font-bold text-white shrink-0">
+            {user?.first_name?.[0]}{user?.second_name?.[0]}
           </div>
-          <div className="min-w-0">
-            <p className="text-[12px] font-black text-black uppercase leading-none truncate mb-1.5">
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-semibold text-zinc-900 truncate leading-none">
               {user?.first_name} {user?.second_name}
             </p>
-            <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest leading-none truncate opacity-60">
+            <p className="text-[10px] text-zinc-400 mt-0.5 capitalize">
               {user?.role?.replace("_", " ")}
             </p>
           </div>
@@ -143,112 +250,206 @@ export function AppLayout() {
     </div>
   );
 
+  // ── Layout ────────────────────────────────────────────────────────────────────
+
   return (
-    <div className="flex h-screen bg-zinc-50/50 overflow-hidden text-black antialiased font-sans">
-      <aside className="hidden lg:flex flex-col w-72 flex-shrink-0 animate-in slide-in-from-left duration-700">
+    <div className="flex h-screen bg-[#f8f8fb] overflow-hidden font-['Inter'] antialiased">
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex flex-col w-60 shrink-0">
         <SidebarContent />
       </aside>
 
+      {/* Mobile sidebar */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-md" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-80 bg-white animate-in slide-in-from-left duration-500 shadow-2xl">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
+          <aside className="absolute left-0 top-0 bottom-0 w-64">
             <SidebarContent />
           </aside>
         </div>
       )}
 
+      {/* Main column */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-20 bg-white/70 backdrop-blur-xl border-b border-zinc-100 flex items-center justify-between px-10 flex-shrink-0 z-40 sticky top-0 shadow-sm animate-in slide-in-from-top duration-700">
-          <div className="flex items-center gap-8">
-            <button onClick={() => setMobileOpen(true)} className="lg:hidden p-3 text-zinc-900 hover:bg-zinc-100 rounded-2xl transition-colors">
-              <Menu size={22} />
+        {/* Top bar */}
+        <header className="h-14 bg-white border-b border-zinc-100 flex items-center justify-between px-5 shrink-0">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden p-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-all"
+            >
+              <Menu size={18} />
             </button>
-            <div className="hidden lg:block">
-               <h1 className="text-[14px] font-black uppercase tracking-[0.2em] text-zinc-900 flex items-center gap-4">
-                 System Console <span className="text-zinc-200">/</span> <span className="text-zinc-400 opacity-60 hover:text-black transition-colors cursor-pointer capitalize">Workspace Registry</span>
-               </h1>
+            <div className="hidden lg:flex items-center gap-1.5 text-xs text-zinc-400">
+              <ChevronRight size={12} />
+              <span>BrAIN Labs</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-10">
-            <div className="hidden sm:flex items-center bg-zinc-100/50 px-6 py-2.5 border border-zinc-200 rounded-2xl group focus-within:bg-white focus-within:ring-4 focus-within:ring-black/5 transition-all shadow-inner">
-               <Search size={16} className="text-zinc-400 group-focus-within:text-black transition-colors" />
-               <input type="text" placeholder="Global Data Search..." className="bg-transparent border-none focus:ring-0 text-[12px] px-4 w-56 placeholder:text-zinc-400 font-bold uppercase tracking-tight" />
-            </div>
-
-            <div className="flex items-center gap-8 border-l border-zinc-200 pl-10 ml-2 h-8 relative">
-               <button 
-                className={cn(
-                  "transition-all duration-300 relative p-2.5 rounded-xl",
-                  showNotifications ? "text-orange-500 bg-orange-50 shadow-lg shadow-orange-200/50" : "text-zinc-400 hover:text-orange-500 hover:bg-orange-50/50"
+          {/* Right actions */}
+          <div className="flex items-center gap-1" ref={notifRef}>
+            {/* Notification bell */}
+            <div className="relative">
+              <button
+                onClick={() => { setNotifOpen(v => !v); if (!notifOpen) fetchNotifications(); }}
+                className={`relative p-2 rounded-lg transition-all ${
+                  notifOpen
+                    ? "bg-zinc-900 text-white"
+                    : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
+                }`}
+                title="Notifications"
+              >
+                <Bell size={17} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-zinc-900 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
                 )}
-                onClick={() => {
-                  setShowNotifications(!showNotifications);
-                  setShowLogOutConfirm(false);
-                }}
-               >
-                 <Bell size={22} />
-                 <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-orange-500 border-2 border-white rounded-full shadow-lg" />
-               </button>
+              </button>
 
-               {showNotifications && (
-                 <div className="absolute top-16 right-16 w-80 animate-in fade-in slide-in-from-top-4 duration-300 z-50">
-                    <MinimalCard className="p-8 shadow-2xl border-zinc-100 bg-white/90 backdrop-blur-xl">
-                       <div className="flex items-center justify-between mb-6 pb-3 border-b border-zinc-100">
-                          <p className="text-[11px] font-black uppercase tracking-[0.3em] text-zinc-900">System Activity</p>
-                          <button onClick={() => setShowNotifications(false)} className="p-1 hover:bg-zinc-100 rounded-lg transition-colors"><X size={14} /></button>
-                       </div>
-                       <div className="py-12 flex flex-col items-center gap-4 text-center">
-                          <div className="p-4 bg-zinc-50 rounded-2xl"><Bell size={32} className="text-zinc-200" /></div>
-                          <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.5em] leading-relaxed">No Data Nodes Found</p>
-                       </div>
-                    </MinimalCard>
-                 </div>
-               )}
+              {/* Notification dropdown */}
+              {notifOpen && (
+                <div className="absolute right-0 top-11 w-96 bg-white border border-zinc-200 rounded-xl shadow-lg z-50 overflow-hidden">
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100">
+                    <div className="flex items-center gap-2">
+                      <Bell size={14} className="text-zinc-500" />
+                      <span className="text-sm font-semibold text-zinc-900">Notifications</span>
+                      {unreadCount > 0 && (
+                        <span className="px-2 py-0.5 bg-zinc-900 text-white text-[10px] font-bold rounded-full">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    <button onClick={() => setNotifOpen(false)} className="p-1 text-zinc-400 hover:text-zinc-700 rounded transition-colors">
+                      <X size={14} />
+                    </button>
+                  </div>
 
-               <button 
-                className="text-zinc-400 hover:text-orange-500 hover:bg-orange-50/50 p-2.5 rounded-xl transition-all duration-300"
-                onClick={() => {
-                  setShowLogOutConfirm(true);
-                  setShowNotifications(false);
-                }}
-               >
-                 <LogOut size={22} />
-               </button>
+                  {/* Body */}
+                  <div className="max-h-[420px] overflow-y-auto">
+                    {notifLoading ? (
+                      <div className="p-4 space-y-2">
+                        {[1, 2, 3].map(i => (
+                          <div key={i} className="h-14 bg-zinc-50 rounded-lg animate-pulse" />
+                        ))}
+                      </div>
+                    ) : notifications.length === 0 ? (
+                      <div className="py-14 flex flex-col items-center gap-2 text-center px-6">
+                        <div className="w-10 h-10 bg-zinc-100 rounded-xl flex items-center justify-center">
+                          <CheckCircle2 size={18} className="text-zinc-400" />
+                        </div>
+                        <p className="text-sm font-medium text-zinc-500">All clear</p>
+                        <p className="text-xs text-zinc-400">No pending approvals or requests</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-zinc-50">
+                        {/* Member requests first */}
+                        {notifications.filter(n => n.kind === "member_request").length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest px-4 py-2.5 bg-zinc-50">
+                              Registration Requests
+                            </p>
+                            {notifications
+                              .filter(n => n.kind === "member_request")
+                              .map(n => (
+                                <div key={n.id} className="px-4 py-3 hover:bg-zinc-50 transition-colors">
+                                  <div className="flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center text-[11px] font-bold text-white shrink-0 mt-0.5">
+                                      {n.title.split(" ").map(p => p[0]).join("").slice(0, 2)}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-zinc-900 truncate">{n.title}</p>
+                                      <p className="text-xs text-zinc-400 mt-0.5">{n.subtitle}</p>
+                                      {n.memberId && (
+                                        <div className="flex items-center gap-2 mt-2">
+                                          <button
+                                            onClick={() => handleApprove(n.memberId!)}
+                                            disabled={approvingId === n.memberId}
+                                            className="flex items-center gap-1 px-2.5 py-1 bg-zinc-900 text-white text-xs font-medium rounded-md hover:bg-zinc-700 disabled:opacity-50 transition-colors"
+                                          >
+                                            <CheckCircle2 size={11} />
+                                            {approvingId === n.memberId ? "..." : "Approve"}
+                                          </button>
+                                          <button
+                                            onClick={() => handleReject(n.memberId!)}
+                                            disabled={approvingId === n.memberId}
+                                            className="flex items-center gap-1 px-2.5 py-1 border border-zinc-200 text-zinc-600 text-xs font-medium rounded-md hover:bg-zinc-50 disabled:opacity-50 transition-colors"
+                                          >
+                                            <XCircle size={11} />
+                                            Reject
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        )}
+
+                        {/* Pending content */}
+                        {notifications.filter(n => n.kind === "pending_content").length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest px-4 py-2.5 bg-zinc-50">
+                              Pending Approvals
+                            </p>
+                            {notifications
+                              .filter(n => n.kind === "pending_content")
+                              .map(n => (
+                                <Link
+                                  key={n.id}
+                                  to={n.href}
+                                  onClick={() => setNotifOpen(false)}
+                                  className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-50 group transition-colors"
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center shrink-0">
+                                    <Clock size={13} className="text-zinc-500" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-zinc-900 truncate">{n.title}</p>
+                                    <p className="text-xs text-zinc-400 mt-0.5">{n.subtitle}</p>
+                                  </div>
+                                  <ArrowRight size={13} className="text-zinc-300 group-hover:text-zinc-600 shrink-0" />
+                                </Link>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  {notifications.length > 0 && (
+                    <div className="px-4 py-3 border-t border-zinc-100 bg-zinc-50">
+                      <Link
+                        to="/dashboard/members"
+                        onClick={() => setNotifOpen(false)}
+                        className="flex items-center justify-center gap-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
+                      >
+                        View all in Members <ArrowRight size={12} />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+
+            {/* Sign-out button */}
+            <button
+              onClick={handleLogout}
+              title="Sign out"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+            >
+              <LogOut size={14} />
+              <span className="hidden sm:inline">Sign out</span>
+            </button>
           </div>
         </header>
 
-        {/* Sign-out Confirmation Modal */}
-        {showLogOutConfirm && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 sm:p-0">
-             <div className="absolute inset-0 bg-black/40 backdrop-blur-xl animate-in fade-in duration-500" onClick={() => setShowLogOutConfirm(false)} />
-             <div className="bg-white/90 border border-zinc-100 p-14 max-w-md w-full relative animate-in zoom-in-95 duration-500 shadow-2xl rounded-4xl backdrop-blur-2xl">
-                <div className="flex flex-col items-center text-center gap-10">
-                   <div className="p-7 bg-zinc-900 rounded-3xl shadow-2xl shadow-zinc-900/20 text-white">
-                      <AlertCircle size={48} />
-                   </div>
-                   <div>
-                      <h2 className="text-3xl font-black uppercase tracking-tighter text-black mb-4">System Disconnect</h2>
-                      <p className="text-base font-medium text-zinc-500 leading-relaxed max-w-xs">Are you sure you want to invalidate your current administrative session?</p>
-                   </div>
-                   <div className="grid grid-cols-2 gap-4 w-full pt-4">
-                      <FunctionalButton variant="white" onClick={() => setShowLogOutConfirm(false)} className="rounded-2xl">Abort</FunctionalButton>
-                      <FunctionalButton onClick={handleLogout} className="rounded-2xl shadow-2xl shadow-zinc-900/10">Disconnect</FunctionalButton>
-                   </div>
-                </div>
-             </div>
-          </div>
-        )}
-
-        <main className="flex-1 overflow-y-auto bg-zinc-50/20 relative">
-          <div className={cn(
-            "animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-48",
-            ["/dashboard", "/account", "/settings", "/help"].includes(location.pathname) 
-              ? "p-10 lg:p-14 max-w-7xl mx-auto" 
-              : "p-0"
-          )}>
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="w-full h-full p-6 lg:p-8 max-w-7xl mx-auto">
             <Outlet />
           </div>
         </main>

@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
-import { Briefcase, Calendar, ShieldCheck, FileText, Hash, Info, ArrowRight } from "lucide-react";
+import { Briefcase, Calendar, FileText, ArrowRight, ExternalLink } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { api, type Grant, type ApprovalStatus } from "../../lib/api";
+import { api } from "../../api";
+import type { Grant, ApprovalStatus } from "../../types";
 import { ContentPageTemplate } from "../../components/shared/ContentPageTemplate";
-import { FormField, FormInput, FormTextArea, FormSelect } from "../../components/shared/FormElements";
-import { Badge } from "../../components/shared/UIPrimitives";
+import { Input } from "../../components/ui/Input";
+import { Badge } from "../../components/ui/Badge";
+import { AttachmentList } from "../../components/ui/AttachmentList";
+import { Button } from "../../components/ui/Button";
 
 export default function GrantsPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isResearcher } = useAuth();
   const [items, setItems] = useState<Grant[]>([]);
   const [loading, setLoading] = useState(true);
-  const isUserAdmin = isAdmin();
 
   const fetchItems = async () => {
     try {
@@ -28,10 +30,9 @@ export default function GrantsPage() {
   const emptyItem: Partial<Grant> = {
     title: "",
     description: "",
-    legal_docs: "",
     passed_date: new Date().toISOString().split('T')[0],
-    expire_date: new Date(Date.now() + 31536000000).toISOString().split('T')[0],
-    approval_status: "PENDING" as ApprovalStatus,
+    expire_date: new Date(Date.now() + 31_536_000_000).toISOString().split('T')[0],
+    approval_status: "DRAFT" as ApprovalStatus,
   };
 
   const handleSave = async (item: Partial<Grant>) => {
@@ -40,124 +41,178 @@ export default function GrantsPage() {
     await fetchItems();
   };
 
-  const handleToggleStatus = async (item: Grant) => {
-    const newStatus = item.approval_status === "APPROVED" ? "REJECTED" : "APPROVED";
-    if (newStatus === "APPROVED") await api.admin.approveContent("grant", item.id);
-    else await api.admin.rejectContent("grant", item.id);
+  const handleSubmitForReview = async (item: Grant) => {
+    await api.content.submit("grant_info", item.id);
     await fetchItems();
   };
+
+  const handleReview = async (item: Grant, status: 'PENDING_ADMIN' | 'REJECTED') => {
+    await api.content.review("grant_info", item.id, status);
+    await fetchItems();
+  };
+
+  const handleToggleStatus = async (item: Grant) => {
+    const newStatus = item.approval_status === "APPROVED" ? "REJECTED" : "APPROVED";
+    if (newStatus === "APPROVED") await api.admin.approveContent("grant_info", item.id);
+    else await api.admin.rejectContent("grant_info", item.id);
+    await fetchItems();
+  };
+
+  const formatDate = (d?: string) =>
+    d ? new Date(d).toLocaleDateString(undefined, { dateStyle: "medium" }) : "—";
 
   return (
     <ContentPageTemplate<Grant>
       title="Grants"
-      subtitle={`${items.length} funding nodes active in the professional registry.`}
+      subtitle={`${items.length} grant${items.length !== 1 ? "s" : ""} recorded.`}
       icon={Briefcase}
       items={items}
       loading={loading}
-      isAdmin={isUserAdmin}
+      isAdmin={isAdmin()}
+      isResearcher={isResearcher()}
       emptyItem={emptyItem}
       onSave={handleSave}
-      onToggleStatus={isUserAdmin ? handleToggleStatus : undefined}
-      searchFields={(item) => [item.title, item.description]}
+      onSubmitForReview={handleSubmitForReview}
+      onReview={handleReview}
+      onToggleStatus={isAdmin() ? handleToggleStatus : undefined}
+      searchFields={(item) => [item.title, item.description || ""]}
       filterOptions={[
-        { label: "ALL GRANTS", value: "ALL" },
-        { label: "PUBLISHED", value: "APPROVED" },
-        { label: "PENDING", value: "PENDING" },
+        { label: "All", value: "ALL" },
+        { label: "Published", value: "APPROVED" },
+        { label: "Pending", value: "PENDING_ADMIN" },
+        { label: "Draft", value: "DRAFT" },
       ]}
       renderListItem={(item, onClick) => (
-        <article key={item.id} onClick={onClick} className="group relative bg-white border border-zinc-100 p-10 hover:shadow-2xl hover:shadow-zinc-200/50 transition-all duration-500 cursor-pointer flex flex-col gap-8 rounded-3xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-           <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                 <div className="p-2.5 bg-zinc-900 text-white rounded-xl shadow-lg opacity-90">
-                    <Briefcase size={18} />
-                 </div>
-                 <span className="text-[11px] font-black uppercase tracking-[0.25em] text-zinc-900 border-b-2 border-zinc-900 pb-0.5">
-                    FUNDING NODE
-                 </span>
+        <div
+          key={item.id}
+          onClick={onClick}
+          className="group bg-white border border-zinc-200 hover:border-zinc-300 hover:shadow-lg hover:shadow-zinc-100 rounded-2xl p-5 cursor-pointer flex flex-col gap-3 transition-all duration-200"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-center">
+                <Briefcase size={14} className="text-zinc-600" />
               </div>
-              <Badge status={item.approval_status} className="rounded-full" />
-           </div>
-           <div className="flex-1 min-w-0">
-              <h3 className="text-2xl font-black text-zinc-900 leading-tight group-hover:text-black transition-all line-clamp-2 uppercase tracking-tighter">{item.title}</h3>
-              <p className="text-[11px] text-zinc-400 font-bold uppercase tracking-[0.2em] mt-6 flex items-center gap-3 bg-zinc-50 px-4 py-2 rounded-full w-fit border border-zinc-100 italic">
-                <Hash size={13} /> GNT-0X{item.id?.toString().slice(-4).toUpperCase()}
-              </p>
-           </div>
-           <div className="pt-8 border-t border-zinc-50 flex items-center justify-between">
-              <div className="text-[10px] font-black text-zinc-300 uppercase tracking-widest translate-x-2 group-hover:translate-x-0 transition-all opacity-0 group-hover:opacity-100 flex items-center gap-2">
-                 Audit Funding <ArrowRight size={12} />
-              </div>
-           </div>
-        </article>
+              <span className="text-xs font-medium text-zinc-400">Grant</span>
+            </div>
+            <Badge status={item.approval_status} />
+          </div>
+
+          <div className="space-y-1.5">
+            <h3 className="text-sm font-semibold text-zinc-900 leading-snug line-clamp-2">{item.title}</h3>
+            {item.description && (
+              <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">{item.description}</p>
+            )}
+          </div>
+
+          <div className="pt-3 border-t border-zinc-100 flex items-center justify-between">
+            <span className="text-xs text-zinc-400 flex items-center gap-1">
+              <Calendar size={11} /> Expires {formatDate(item.expire_date)}
+            </span>
+            <ArrowRight size={13} className="text-zinc-300 group-hover:text-zinc-600 group-hover:translate-x-0.5 transition-all" />
+          </div>
+        </div>
       )}
       renderDetail={(item) => (
-        <div className="space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-               <div className="p-10 bg-white border border-zinc-100 rounded-3xl shadow-xl shadow-zinc-200/30">
-                  <div className="flex items-center gap-4 mb-6 text-zinc-300">
-                     <ShieldCheck size={20} />
-                     <span className="text-[11px] font-black uppercase tracking-[0.3em]">Governance Hub</span>
-                  </div>
-                  <p className="text-xl font-black text-black uppercase tracking-tighter">{item.approval_status}</p>
-               </div>
-               <div className="p-10 bg-white border border-zinc-100 rounded-3xl shadow-xl shadow-zinc-200/30">
-                  <div className="flex items-center gap-4 mb-6 text-zinc-300">
-                     <Calendar size={20} />
-                     <span className="text-[11px] font-black uppercase tracking-[0.3em]">Award Window</span>
-                  </div>
-                  <p className="text-xl font-black text-black uppercase tracking-tighter">{item.passed_date} — {item.expire_date}</p>
-               </div>
-               <div className="p-10 bg-white border border-zinc-100 rounded-3xl shadow-xl shadow-zinc-200/30 flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-4 mb-6 text-zinc-300">
-                       <FileText size={20} />
-                       <span className="text-[11px] font-black uppercase tracking-[0.3em]">Legal Docs Hub</span>
-                    </div>
-                    <p className="text-sm font-black text-zinc-900 uppercase">{item.legal_docs ? "Registry Ready" : "Unset"}</p>
-                  </div>
-               </div>
+        <div className="space-y-8 pb-20 animate-enter">
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
+              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1">Awarded</p>
+              <p className="text-sm font-semibold text-zinc-900">{formatDate(item.passed_date)}</p>
             </div>
-
-            <div className="space-y-10">
-               <h4 className="text-[14px] font-black text-black uppercase tracking-[0.5em] flex items-center gap-4 border-b border-zinc-100 pb-4 w-fit">
-                 <Info size={20} className="text-zinc-900" /> Archival Description
-               </h4>
-               <div className="p-14 bg-zinc-50/50 border border-zinc-100 text-zinc-600 leading-relaxed font-medium italic text-lg rounded-[2.5rem] shadow-inner">
-                 {item.description || "No technical description node associated with this grant identity Archive cluster."}
-               </div>
+            <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
+              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1">Expires</p>
+              <p className="text-sm font-semibold text-zinc-900">{formatDate(item.expire_date)}</p>
             </div>
+          </div>
 
-            {item.legal_docs && (
-               <div className="flex items-center justify-center pt-8">
-                  <a href={item.legal_docs} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-6 px-12 py-6 bg-zinc-900 text-white text-[13px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-black transition-all shadow-2xl shadow-zinc-900/20 active:scale-95">
-                    <FileText size={20} className="group-hover:rotate-12 transition-transform" /> Execute Governance Document
-                  </a>
-               </div>
-            )}
+          {item.description && (
+            <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-100 text-sm text-zinc-900 italic leading-relaxed font-medium">
+              "{item.description}"
+            </div>
+          )}
+
+          {/* Documents */}
+          {(item.documents ?? []).length > 0 && (
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Documents</h4>
+              <div className="flex flex-wrap gap-3">
+                {item.documents!.map(doc => (
+                  <Button
+                    key={doc.id}
+                    onClick={() => window.open(doc.doc_url, '_blank')}
+                    variant="outline"
+                    className="h-10 px-4 text-xs font-medium gap-2"
+                  >
+                    <FileText size={13} className="text-zinc-600" />
+                    {doc.doc_label || 'View Document'}
+                    <ExternalLink size={11} className="text-zinc-400" />
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
       renderEdit={(item, setItem) => (
-        <div className="space-y-16">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-               <FormField label="Identifier Identification" full><FormInput placeholder="Registry Title Identification node..." value={item.title} onChange={e => setItem({...item, title: e.target.value})} className="rounded-2xl" /></FormField>
-               <FormField label="Archival Award Date"><FormInput type="date" value={item.passed_date} onChange={e => setItem({...item, passed_date: e.target.value})} className="rounded-2xl" /></FormField>
-               <FormField label="Archival Expiry Date"><FormInput type="date" value={item.expire_date} onChange={e => setItem({...item, expire_date: e.target.value})} className="rounded-2xl" /></FormField>
-               <FormField label="Legal Documentation Index" full><FormInput placeholder="https://external-node-id..." value={item.legal_docs} onChange={e => setItem({...item, legal_docs: e.target.value})} className="rounded-2xl" /></FormField>
-               
-               <FormField label="Registry Status Hub" full={isUserAdmin}>
-                  <FormSelect 
-                    value={item.approval_status || "PENDING"} 
-                    onChange={e => setItem({ ...item, approval_status: e.target.value as ApprovalStatus })}
-                    className="rounded-2xl"
-                    options={[
-                      { label: "PENDING MODERATION Cluster", value: "PENDING" },
-                      ...(isUserAdmin ? [{ label: "AUTHORIZE GRANT Cluster", value: "APPROVED" }, { label: "INVALIDATE GRANT Cluster", value: "REJECTED" }] : [])
-                    ]}
-                  />
-               </FormField>
+        <div className="space-y-8">
+          <Input
+            label="Grant Title"
+            placeholder="Enter grant name..."
+            value={item.title ?? ""}
+            onChange={e => setItem({ ...item, title: e.target.value })}
+          />
 
-               <FormField label="Archival Description Abstract" full><FormTextArea className="min-h-[220px] rounded-3xl" placeholder="Full grant context node identification..." value={item.description} onChange={e => setItem({...item, description: e.target.value})} /></FormField>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Input
+              label="Award Date"
+              type="date"
+              value={item.passed_date ?? ""}
+              onChange={e => setItem({ ...item, passed_date: e.target.value })}
+            />
+            <Input
+              label="Expiry Date"
+              type="date"
+              value={item.expire_date ?? ""}
+              onChange={e => setItem({ ...item, expire_date: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Description</label>
+            <textarea
+              className="input-monochrome min-h-[120px] py-3"
+              placeholder="Describe the grant objectives and scope..."
+              value={item.description ?? ""}
+              onChange={e => setItem({ ...item, description: e.target.value })}
+            />
+          </div>
+
+          {/* Documents — only after creation */}
+          {item.id ? (
+            <AttachmentList
+              label="Documents"
+              icon="link"
+              items={item.documents ?? []}
+              displayKey="doc_url"
+              secondaryKey="doc_label"
+              inputPlaceholder="https://example.com/grant-doc.pdf"
+              secondaryPlaceholder="Label (e.g. Grant Agreement)"
+              onAdd={async (url, label) => {
+                await api.grants.addDocument(item.id as number, { doc_url: url, doc_label: label });
+                await fetchItems();
+              }}
+              onRemove={async (docId) => {
+                await api.grants.removeDocument(item.id as number, docId);
+                await fetchItems();
+              }}
+            />
+          ) : (
+            <p className="text-xs text-zinc-400 text-center py-4 border border-dashed border-zinc-200 rounded-xl">
+              Documents can be attached after saving the grant for the first time.
+            </p>
+          )}
         </div>
       )}
     />

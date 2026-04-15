@@ -9,6 +9,7 @@ tutorialsRouter.use(requireAuth);
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
 const TutorialSchema = z.object({
+  title:       z.string().min(1).max(255),
   content:     z.string().min(1),
   description: z.string().optional().nullable(),
 });
@@ -33,13 +34,13 @@ async function ownOrFail(tutId, memberId, role, res) {
 // ─── GET /tutorials ───────────────────────────────────────────────────────────
 
 tutorialsRouter.get('/', async (req, res) => {
-  const query = supabase
+  let query = supabase
     .from('tutorial')
-    .select('*, tutorial_image(image_url)')
+    .select('*, tutorial_image(id, image_url)')
     .order('created_at', { ascending: false });
 
   if (req.user.role !== 'admin') {
-    query.eq('created_by_member_id', req.user.sub);
+    query = query.eq('created_by_member_id', req.user.sub);
   }
 
   const { data, error } = await query;
@@ -58,7 +59,7 @@ tutorialsRouter.post('/', async (req, res) => {
     .insert({
       ...parsed.data,
       created_by_member_id: req.user.sub,
-      approval_status: 'PENDING',
+      approval_status: 'DRAFT',
     })
     .select()
     .single();
@@ -94,7 +95,7 @@ tutorialsRouter.put('/:id', async (req, res) => {
 
   const { data, error } = await supabase
     .from('tutorial')
-    .update({ ...parsed.data, approval_status: 'PENDING' })
+    .update({ ...parsed.data, approval_status: 'DRAFT' })
     .eq('id', req.params.id)
     .select()
     .single();
@@ -131,4 +132,20 @@ tutorialsRouter.post('/:id/images', async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
   res.status(201).json(data);
+});
+
+// ─── DELETE /tutorials/:id/images/:imgId ─────────────────────────────────────
+
+tutorialsRouter.delete('/:id/images/:imgId', async (req, res) => {
+  const tut = await ownOrFail(req.params.id, req.user.sub, req.user.role, res);
+  if (!tut) return;
+
+  const { error } = await supabase
+    .from('tutorial_image')
+    .delete()
+    .eq('id', req.params.imgId)
+    .eq('tutorial_id', req.params.id);
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ message: 'Image removed' });
 });

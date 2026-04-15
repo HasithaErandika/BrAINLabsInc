@@ -1,41 +1,32 @@
 import { useEffect, useState } from "react";
-import { 
-  Users, 
-  BookOpen, 
-  FileText, 
-  Inbox,
-  ArrowRight
-} from "lucide-react";
+import { Users, BookOpen, FileText, Inbox, ArrowRight, CheckSquare2, ShieldAlert } from "lucide-react";
 import { Link } from "react-router-dom";
-import { api } from "../../lib/api";
-import { StatCard } from "./components/StatCard";
-import { MinimalCard, FunctionalButton } from "../../components/shared/UIPrimitives";
-import { cn } from "../../lib/utils";
+import { api } from "../../api";
+import { useAuth } from "../../hooks/useAuth";
+import { Badge } from "../../components/ui/Badge";
 
-interface Stats {
-  users: number;
-  publications: number;
-  blog: number;
-  events: number;
-  pending: number;
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
 }
 
-interface PendingItem {
-  id: string;
-  title: string;
-  type: 'Publication' | 'Blog' | 'Event' | 'Project';
-  author: string;
-  date: string;
-  href: string;
-}
+interface Stats { users: number; publications: number; blog: number; pending: number }
+interface PendingItem { id: string; title: string; type: string; date: string; href: string }
+
+const TYPE_ICON: Record<string, string> = {
+  Publication: "P", Blog: "B", Event: "E", Project: "R",
+};
 
 export function AdminDashboard() {
-  const [stats, setStats] = useState<Stats>({ users: 0, publications: 0, blog: 0, events: 0, pending: 0 });
+  const { user } = useAuth();
+  const [stats, setStats] = useState<Stats>({ users: 0, publications: 0, blog: 0, pending: 0 });
   const [pendingItems, setPendingItems] = useState<PendingItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    (async () => {
       try {
         const [users, pubs, blogs, events, projects] = await Promise.all([
           api.admin.getMembers(),
@@ -44,173 +35,177 @@ export function AdminDashboard() {
           api.events.list(),
           api.projects.list(),
         ]);
-
-        const pendingPubs: PendingItem[] = pubs.filter((p: any) => p.approval_status === 'PENDING').map((p: any) => ({
-          id: p.id!,
-          title: p.title,
-          type: 'Publication',
-          author: p.authors || "Unknown",
-          date: p.publication_year?.toString() ?? "N/A",
-          href: '/publications'
-        }));
-
-        const pendingBlogs: PendingItem[] = blogs.filter((b: any) => b.approval_status === 'PENDING').map((b: any) => ({
-          id: b.id!,
-          title: b.title,
-          type: 'Blog',
-          author: b.author_name ?? "Unknown",
-          date: b.published_date ?? "N/A",
-          href: '/blog'
-        }));
-
-        const pendingEvents: PendingItem[] = events.filter((e: any) => e.approval_status === 'PENDING').map((e: any) => ({
-          id: e.id!,
-          title: e.title,
-          type: 'Event',
-          author: e.event_type ?? "General",
-          date: e.event_date ?? "N/A",
-          href: '/events'
-        }));
-
-        const pendingProjects: PendingItem[] = projects.filter((p: any) => p.approval_status === 'PENDING').map((p: any) => ({
-          id: p.id!,
-          title: p.title || p.category,
-          type: 'Project',
-          author: "Research Team",
-          date: p.created_at?.split('T')[0] ?? "N/A",
-          href: '/projects'
-        }));
-
-        const allPending = [...pendingPubs, ...pendingBlogs, ...pendingEvents, ...pendingProjects];
-        setPendingItems(allPending);
-
-        setStats({
-          users: users.length,
-          publications: pubs.length,
-          blog: blogs.length,
-          events: events.length,
-          pending: allPending.length,
-        });
-      } catch (err) {
-        console.error("Failed to fetch admin stats:", err);
+        const collect = (arr: any[], type: string, href: string): PendingItem[] =>
+          arr
+            .filter(x => x.approval_status === "PENDING_ADMIN")
+            .map(x => ({
+              id: String(x.id),
+              title: x.title ?? "Untitled",
+              type,
+              date: x.created_at?.split("T")[0] ?? "—",
+              href,
+            }));
+        const all = [
+          ...collect(pubs, "Publication", "/publications"),
+          ...collect(blogs, "Blog", "/blog"),
+          ...collect(events, "Event", "/events"),
+          ...collect(projects, "Project", "/projects"),
+        ];
+        setPendingItems(all);
+        setStats({ users: users.length, publications: pubs.length, blog: blogs.length, pending: all.length });
+      } catch (e) {
+        console.error(e);
       } finally {
         setLoading(false);
       }
-    };
-    fetchStats();
+    })();
   }, []);
 
   return (
-    <div className="space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-40">
-      {/* Premium Header */}
-      <div className="border-b border-zinc-100 pb-12">
-        <div className="flex items-center gap-3 mb-4">
-           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50 animate-pulse" />
-           <span className="text-[11px] font-black uppercase tracking-[0.4em] text-zinc-400">Moderation Active</span>
-        </div>
-        <h1 className="text-4xl font-black text-black tracking-tight mb-3">Administrative Hub</h1>
-        <p className="text-sm text-zinc-500 font-medium max-w-2xl">Global system management, personnel oversight, and research output moderation.</p>
-      </div>
+    <div className="space-y-6">
 
-      {/* Grid: Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard label="Personnel" value={loading ? "..." : stats.users} icon={Users} href="/dashboard/members" />
-        <StatCard label="Research Output" value={loading ? "..." : stats.publications} icon={BookOpen} href="/publications" />
-        <StatCard label="Articles" value={loading ? "..." : stats.blog} icon={FileText} href="/blog" />
-        <StatCard 
-          label="Audit Pending" 
-          value={loading ? "..." : stats.pending} 
-          icon={Inbox} 
-          href="/publications" 
-          className={cn(stats.pending > 0 ? "border-zinc-300 ring-4 ring-black/5" : "border-zinc-100")}
-          trend={{ value: stats.pending.toString(), label: "Items", type: "neutral" }}
-        />
-      </div>
+      {/* ── Hero banner ──────────────────────────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-2xl bg-zinc-900 px-8 py-10 text-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-950" />
+        <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/[0.04] blur-2xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 w-40 h-40 rounded-full bg-white/[0.03] blur-xl pointer-events-none" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Main: Audit Feed */}
-        <div className="lg:col-span-8 space-y-4">
-          <MinimalCard className="p-10 shadow-2xl shadow-zinc-200/50">
-            <div className="flex items-center justify-between mb-10 pb-4 border-b border-zinc-50">
-              <h2 className="text-[12px] font-black text-black uppercase tracking-widest flex items-center gap-3">
-                Prioritized Feed <span className="px-2.5 py-0.5 bg-zinc-900 text-white rounded-full text-[10px] tracking-normal">{pendingItems.length}</span>
-              </h2>
-              <Link to="/publications" className="text-[11px] font-bold text-zinc-400 hover:text-black uppercase underline underline-offset-8 transition-colors">Full Registry</Link>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+          <div>
+            <p className="text-zinc-400 text-sm mb-1.5">{greeting()},</p>
+            <h1 className="text-3xl font-bold tracking-tight leading-none">
+              {user?.first_name} {user?.second_name}
+            </h1>
+            <div className="mt-3">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/10 rounded-full text-[11px] font-medium text-zinc-300">
+                <ShieldAlert size={11} /> Administrator
+              </span>
             </div>
+          </div>
+          {!loading && stats.pending > 0 && (
+            <div className="flex items-center gap-2.5 px-4 py-2.5 bg-white text-zinc-900 rounded-xl font-semibold text-sm shrink-0 shadow-md">
+              <span className="w-2 h-2 bg-zinc-800 rounded-full animate-pulse" />
+              {stats.pending} pending approval{stats.pending !== 1 ? "s" : ""}
+            </div>
+          )}
+        </div>
+      </div>
 
-            <div className="space-y-2">
-              {loading ? (
-                [1, 2, 3].map(i => <div key={i} className="h-16 bg-zinc-50 rounded-2xl animate-pulse mb-3" />)
-              ) : pendingItems.length > 0 ? (
-                pendingItems.map((item) => (
-                  <Link 
-                    key={`${item.type}-${item.id}`} 
-                    to={item.href}
-                    className="flex items-center justify-between p-5 hover:bg-zinc-50 rounded-2xl transition-all duration-300 group"
-                  >
-                    <div className="flex items-center gap-6">
-                       <div className={cn(
-                          "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300",
-                          item.type === 'Publication' ? "bg-zinc-900 text-white" : "bg-zinc-50 text-zinc-400 group-hover:bg-zinc-200 group-hover:text-black"
-                       )}>
-                          <FileText size={16} />
-                       </div>
-                       <div>
-                          <p className="text-[13px] font-black text-black leading-none mb-2 group-hover:underline transition-all cursor-pointer">{item.title}</p>
-                          <p className="text-[11px] text-zinc-400 uppercase tracking-widest font-bold">
-                            {item.type} <span className="mx-2 text-zinc-200">•</span> {item.author}
-                          </p>
-                       </div>
-                    </div>
-                    <ArrowRight size={16} className="text-zinc-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                  </Link>
-                ))
-              ) : (
-                <div className="py-24 text-center flex flex-col items-center gap-6">
-                  <div className="p-5 bg-zinc-50 rounded-2xl"><Inbox size={32} className="text-zinc-200" /></div>
-                  <p className="text-zinc-300 text-[11px] font-black uppercase tracking-[0.5em]">System Archive Clean</p>
+      {/* ── Stats ────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-28 bg-zinc-100 rounded-xl animate-pulse" />
+            ))
+          : [
+              { label: "Members", value: stats.users, icon: Users, dark: false },
+              { label: "Publications", value: stats.publications, icon: BookOpen, dark: false },
+              { label: "Blog Posts", value: stats.blog, icon: FileText, dark: false },
+              { label: "Needs Review", value: stats.pending, icon: Inbox, dark: stats.pending > 0 },
+            ].map(s => (
+              <div
+                key={s.label}
+                className={`rounded-xl p-5 border transition-all ${
+                  s.dark
+                    ? "bg-zinc-900 border-zinc-900"
+                    : "bg-white border-zinc-200 hover:border-zinc-300"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${s.dark ? "bg-white/10" : "bg-zinc-100"}`}>
+                    <s.icon size={15} className={s.dark ? "text-white" : "text-zinc-500"} />
+                  </div>
                 </div>
+                <p className={`text-3xl font-bold tabular-nums leading-none ${s.dark ? "text-white" : "text-zinc-900"}`}>
+                  {s.value}
+                </p>
+                <p className={`text-xs mt-1.5 ${s.dark ? "text-zinc-400" : "text-zinc-500"}`}>{s.label}</p>
+              </div>
+            ))}
+      </div>
+
+      {/* ── Main grid ────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+        {/* Pending queue — 2/3 */}
+        <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-sm font-semibold text-zinc-900">Pending Approvals</h2>
+              {pendingItems.length > 0 && (
+                <span className="px-2 py-0.5 bg-zinc-900 text-white text-[10px] font-bold rounded-full">
+                  {pendingItems.length}
+                </span>
               )}
             </div>
-          </MinimalCard>
+            <Link
+              to="/publications"
+              className="text-xs font-medium text-zinc-400 hover:text-zinc-900 transition-colors flex items-center gap-1"
+            >
+              View all <ArrowRight size={12} />
+            </Link>
+          </div>
+
+          <div className="divide-y divide-zinc-50">
+            {loading ? (
+              <div className="p-5 space-y-3">
+                {[1, 2, 3].map(i => <div key={i} className="h-14 bg-zinc-50 rounded-lg animate-pulse" />)}
+              </div>
+            ) : pendingItems.length > 0 ? (
+              pendingItems.slice(0, 8).map(item => (
+                <Link
+                  key={`${item.type}-${item.id}`}
+                  to={item.href}
+                  className="flex items-center gap-4 px-5 py-3.5 hover:bg-zinc-50 group transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center shrink-0 text-[11px] font-bold text-zinc-600">
+                    {TYPE_ICON[item.type] ?? "?"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-zinc-900 truncate">{item.title}</p>
+                    <p className="text-xs text-zinc-400 mt-0.5">{item.type} · {item.date}</p>
+                  </div>
+                  <Badge status="PENDING_ADMIN" />
+                  <ArrowRight size={13} className="text-zinc-300 group-hover:text-zinc-600 shrink-0 ml-1" />
+                </Link>
+              ))
+            ) : (
+              <div className="py-16 flex flex-col items-center gap-3 text-center">
+                <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center">
+                  <CheckSquare2 size={20} className="text-zinc-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-zinc-700">All clear</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">Nothing pending approval right now</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Sidebar: Actions */}
-        <div className="lg:col-span-4 space-y-8">
-           <MinimalCard className="p-10 bg-zinc-50/50 border-zinc-100 shadow-xl shadow-zinc-200/30">
-             <h3 className="text-[12px] font-black uppercase tracking-widest text-black mb-8">Asset Dispatch</h3>
-             <div className="space-y-3">
-               {[
-                 { label: "Add Publication", href: "/publications" },
-                 { label: "Draft Insight", href: "/blog" },
-                 { label: "Schedule Event", href: "/events" },
-                 { label: "Initiate Project", href: "/projects" },
-               ].map((action) => (
-                 <Link 
-                   key={action.label} 
-                   to={action.href} 
-                   className="block w-full text-left p-5 text-[11px] font-black bg-white border border-zinc-100 hover:border-zinc-300 hover:shadow-lg transition-all rounded-2xl uppercase tracking-widest"
-                 >
-                   {action.label}
-                 </Link>
-               ))}
-             </div>
-           </MinimalCard>
+        {/* Sidebar — 1/3 */}
+        <div className="flex flex-col gap-4">
 
-           <MinimalCard className="p-10 border-zinc-100 shadow-xl shadow-zinc-200/30 overflow-hidden relative group">
-             <div className="relative z-10">
-               <h3 className="text-[12px] font-black uppercase tracking-widest text-zinc-400 mb-6">User Governance</h3>
-               <p className="text-[12px] text-zinc-500 leading-relaxed font-medium mb-10">Manage personnel credentials and authorization nodes within the community.</p>
-               <Link to="/dashboard/members">
-                  <FunctionalButton className="w-full rounded-2xl shadow-2xl shadow-zinc-900/10 hover:shadow-zinc-900/20">
-                    Personnel Index
-                  </FunctionalButton>
-               </Link>
-             </div>
-             <div className="absolute -right-8 -bottom-8 opacity-5 group-hover:scale-110 transition-transform duration-700 text-zinc-900">
-               <Users size={160} />
-             </div>
-           </MinimalCard>
+
+
+          {/* Members CTA */}
+          <Link to="/dashboard/members" className="block flex-1">
+            <div className="relative overflow-hidden bg-zinc-900 rounded-xl p-5 h-full group cursor-pointer min-h-[140px] flex flex-col justify-between">
+              <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/[0.05] blur-xl pointer-events-none" />
+              <div className="relative z-10">
+                <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center mb-4">
+                  <Users size={16} className="text-white" />
+                </div>
+                <p className="text-white font-semibold text-sm">Member Management</p>
+                <p className="text-zinc-400 text-xs mt-1.5 leading-relaxed">
+                  Review registrations and control lab access.
+                </p>
+              </div>
+              <div className="relative z-10 flex items-center gap-1.5 mt-4 text-xs font-semibold text-zinc-300 group-hover:text-white transition-colors">
+                Open Members <ArrowRight size={12} />
+              </div>
+            </div>
+          </Link>
         </div>
       </div>
     </div>

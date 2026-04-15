@@ -1,24 +1,22 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
-import { api, type Profile } from "../../lib/api";
-import { Loader2, User, BookOpen, FlaskConical, Edit3, Check } from "lucide-react";
+import { api } from "../../api";
+import type { Profile } from "../../types";
+import { User, BookOpen, FlaskConical, Edit3, Check, Users } from "lucide-react";
 import { BasicInfoTab } from "./components/BasicInfoTab";
 import { QualificationsTab } from "./components/QualificationsTab";
 import { OngoingResearchTab } from "./components/OngoingResearchTab";
+import { AssignedResearcherTab } from "./components/AssignedResearcherTab";
+import { ResearchAssistantsTab } from "./components/ResearchAssistantsTab";
+import { Button } from "../../components/ui/Button";
 
-type TabId = "basic" | "qualifications" | "research";
+type TabId = "basic" | "qualifications" | "research" | "assigned_researcher" | "assistants";
 
 interface TabConfig {
   id: TabId;
   label: string;
   icon: React.ElementType;
 }
-
-const TABS: TabConfig[] = [
-  { id: "basic", label: "Identity & Core", icon: User },
-  { id: "research", label: "Ongoing Research", icon: FlaskConical },
-  { id: "qualifications", label: "Education", icon: BookOpen },
-];
 
 export default function Account() {
   const { isAdmin } = useAuth();
@@ -33,27 +31,20 @@ export default function Account() {
       const data = await api.me.get();
       setProfile(data);
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "Failed to load profile data");
+      setError(err.response?.data?.message || err.message || "Credential Retrieval Error");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const filteredTabs = TABS.filter(tab => {
-    if (isAdmin()) return tab.id === "basic";
-    return true;
-  });
+  useEffect(() => { fetchProfile(); }, []);
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center p-8 bg-zinc-50/30">
+      <div className="flex h-[80vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-           <Loader2 className="w-10 h-10 animate-spin text-zinc-900" />
-           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Syncing Identity...</p>
+           <div className="w-8 h-8 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin" />
+           <p className="text-sm font-medium text-zinc-500">Loading profile...</p>
         </div>
       </div>
     );
@@ -61,70 +52,100 @@ export default function Account() {
 
   if (error || !profile) {
     return (
-      <div className="p-10 flex flex-col items-center justify-center h-screen bg-zinc-50">
-        <div className="max-w-md w-full bg-white border border-red-100 p-8 rounded-[2.5rem] shadow-xl shadow-red-900/5 text-center">
-           <div className="w-16 h-16 bg-red-50 text-red-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
-              <User size={32} />
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <div className="max-w-md w-full border border-zinc-200 rounded-xl p-8 text-center space-y-6">
+           <div className="w-12 h-12 bg-zinc-100 text-zinc-500 rounded-full flex items-center justify-center mx-auto">
+              <User size={24} />
            </div>
-           <h2 className="text-xl font-black text-zinc-900 mb-2">Profile Collision</h2>
-           <p className="text-sm font-medium text-zinc-500 leading-relaxed mb-8">{error || "The system could not retrieve your digital identity."}</p>
-           <button onClick={() => window.location.reload()} className="px-8 py-3 bg-zinc-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-zinc-800 transition-all">Retry Handshake</button>
+           <div className="space-y-1.5">
+              <h2 className="text-xl font-bold text-zinc-900">Profile Unavailable</h2>
+              <p className="text-sm text-zinc-500">{error || "Could not resolve your profile data."}</p>
+           </div>
+           <Button onClick={() => window.location.reload()} className="w-full">
+              Retry
+           </Button>
         </div>
       </div>
     );
   }
 
+  const userTabs: TabConfig[] = [
+    { id: "basic", label: "Identity & Profile", icon: User },
+  ];
+
+  if (!isAdmin()) {
+    userTabs.push({ id: "research", label: "Active Research", icon: FlaskConical });
+    userTabs.push({ id: "qualifications", label: "Academic Records", icon: BookOpen });
+    
+    if (profile.role === "researcher") {
+      userTabs.push({ id: "assistants", label: "Research Assistants", icon: Users });
+    }
+    if (profile.role === "research_assistant") {
+      userTabs.push({ id: "assigned_researcher", label: "Assigned Researcher", icon: Users });
+    }
+  }
+
+  const filteredTabs = userTabs;
+
   return (
-    <div className="h-screen flex flex-col md:flex-row bg-white overflow-hidden">
-      {/* Sidebar for Settings */}
-      <div className="w-full md:w-80 flex-shrink-0 border-b md:border-b-0 md:border-r border-zinc-200/60 bg-zinc-50/20 backdrop-blur-3xl overflow-y-auto">
-        <div className="p-8">
-           <div className="mb-10 text-center md:text-left">
-              <div className="w-20 h-20 bg-zinc-900 rounded-[2rem] flex items-center justify-center text-3xl font-black text-white shadow-2xl mx-auto md:mx-0 mb-6">
-                 {profile.first_name[0]}{profile.second_name[0]}
-              </div>
-              <h1 className="text-2xl font-black text-zinc-900 tracking-tighter leading-none">{profile.first_name} {profile.second_name}</h1>
-              <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-2 italic">{profile.role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')}</p>
+    <div className="space-y-6">
+      {/* Header section (matching publications design) */}
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-4">
+           <div className="w-16 h-16 bg-zinc-100 text-zinc-600 rounded-lg flex items-center justify-center text-xl font-bold border border-zinc-200 shadow-sm">
+             {profile.first_name[0]}{profile.second_name[0]}
            </div>
-          
-          <nav className="space-y-2">
-            {filteredTabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-4 px-5 py-4 text-xs font-black uppercase tracking-[0.15em] rounded-2xl transition-all duration-300 ${
-                  activeTab === tab.id
-                    ? "bg-zinc-900 text-white shadow-xl shadow-zinc-900/20 scale-[1.02]"
-                    : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
-                }`}
-              >
-                <tab.icon size={16} strokeWidth={activeTab === tab.id ? 3 : 2} />
-                {tab.label}
-              </button>
-            ))}
-            
-            <div className="pt-8 border-t border-zinc-100 mt-8">
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className={`w-full flex items-center justify-center gap-3 px-6 py-4 text-[10px] font-black uppercase tracking-widest rounded-2xl border-2 transition-all active:scale-95 ${
-                  isEditing
-                    ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
-                    : "bg-white border-zinc-200 text-zinc-900 hover:border-zinc-900 shadow-sm"
-                }`}
-              >
-                {isEditing ? <><Check size={14} /> Finish Customization</> : <><Edit3 size={14} /> Personalize Identity</>}
-              </button>
-            </div>
-          </nav>
+           <div>
+             <div className="flex items-center gap-2 mb-1">
+               <User size={14} className="text-zinc-400" />
+               <span className="text-xs font-medium text-zinc-400 uppercase tracking-widest">Profile Hub</span>
+             </div>
+             <h1 className="text-3xl font-bold text-zinc-900 leading-tight">
+               {profile.first_name} {profile.second_name}
+             </h1>
+             <p className="text-sm font-medium text-zinc-500 capitalize mt-1">
+               {profile.role.replace('_', ' ')}
+             </p>
+           </div>
+        </div>
+
+        <div className="flex gap-2">
+           <Button
+             variant={isEditing ? "primary" : "outline"}
+             onClick={() => setIsEditing(!isEditing)}
+             className="h-9 px-4 text-xs font-semibold shadow-sm"
+           >
+             {isEditing ? <><Check size={14} className="mr-1.5" /> Save Profile</> : <><Edit3 size={14} className="mr-1.5" /> Edit Profile</>}
+           </Button>
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto bg-zinc-50/30">
-        <div className="max-w-4xl mx-auto p-8 lg:p-16 animate-in fade-in slide-in-from-right-4 duration-500">
+      {/* Tabs */}
+      <div className="flex gap-4 border-b border-zinc-200 overflow-x-auto pb-1">
+        {filteredTabs.map((tab) => (
+           <button
+             key={tab.id}
+             onClick={() => setActiveTab(tab.id as TabId)}
+             className={`flex items-center gap-2 px-1 py-3 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${
+               activeTab === tab.id
+                 ? "border-zinc-900 text-zinc-900"
+                 : "border-transparent text-zinc-500 hover:text-zinc-800"
+             }`}
+           >
+             <tab.icon size={15} />
+             {tab.label}
+           </button>
+        ))}
+      </div>
+
+      {/* Tab Content Display */}
+      <div className="pt-2">
+        <div className="max-w-4xl">
           {activeTab === "basic" && <BasicInfoTab cv={profile} onUpdate={fetchProfile} isEditing={isEditing} />}
-          {activeTab === "qualifications" && <QualificationsTab cv={profile} onUpdate={fetchProfile} isEditing={isEditing} />}
           {activeTab === "research" && <OngoingResearchTab cv={profile} onUpdate={fetchProfile} isEditing={isEditing} />}
+          {activeTab === "qualifications" && <QualificationsTab cv={profile} onUpdate={fetchProfile} isEditing={isEditing} />}
+          {activeTab === "assigned_researcher" && <AssignedResearcherTab cv={profile} />}
+          {activeTab === "assistants" && <ResearchAssistantsTab cv={profile} />}
         </div>
       </div>
     </div>

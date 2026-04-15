@@ -34,7 +34,8 @@ export function Modal({
   footer,
   maxWidth,
   size,
-}: ModalProps) {
+  className,
+}: ModalProps & { className?: string }) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const effectiveMaxWidth = size || maxWidth || "lg";
 
@@ -63,35 +64,26 @@ export function Modal({
         onClick={onClose}
       />
 
-      {/* Modal Content - "New Page Opening" Effect */}
+      {/* Modal Content */}
       <div
         className={cn(
-          "relative bg-white rounded-[2.5rem] shadow-[0_32px_128px_-16px_rgba(0,0,0,0.3)] w-full overflow-hidden flex flex-col animate-in slide-in-from-bottom-12 zoom-in-95 fade-in duration-500 ease-out-expo",
-          maxWidthClasses[effectiveMaxWidth]
+          "relative bg-white w-full shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-full border border-zinc-200 animate-in slide-in-from-bottom-12 zoom-in-95 fade-in duration-500",
+          maxWidthClasses[effectiveMaxWidth],
+          className
         )}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-10 py-8 border-b border-zinc-100 bg-white sticky top-0 z-20">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-               <div className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
-               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-300">Operational Module</span>
-            </div>
-            <h2 className="text-3xl font-black text-zinc-900 tracking-tighter uppercase">{title}</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-3 -mr-3 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 rounded-2xl transition-all active:scale-90 border border-transparent hover:border-zinc-100 shadow-sm"
+        <div className="flex items-center justify-between px-10 py-8 border-b border-zinc-100 bg-zinc-50/50">
+          <h2 className="text-xl font-black text-zinc-900 tracking-tight uppercase italic">{title}</h2>
+          <button 
+            onClick={onClose} 
+            className="p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
-
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto px-10 py-10 custom-scrollbar max-h-[85vh] bg-zinc-50/10">
+        <div className="flex-1 overflow-y-auto p-10 lg:p-12 scroll-hide">
           {children}
         </div>
-
         {/* Footer */}
         {footer && (
           <div className="px-10 py-8 bg-white border-t border-zinc-100 flex items-center justify-end gap-4 sticky bottom-0 z-20">

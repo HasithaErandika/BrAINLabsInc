@@ -35,14 +35,14 @@ async function ownOrFail(blogId, memberId, role, res) {
 // ─── GET /blogs ───────────────────────────────────────────────────────────────
 
 blogsRouter.get('/', async (req, res) => {
-  const query = supabase
+  let query = supabase
     .from('blog')
-    .select('*, blog_keyword(keyword), blog_image(image_url)')
+    .select('*, blog_keyword(id, keyword), blog_image(id, image_url)')
     .order('created_at', { ascending: false });
 
   // Admin sees all; others see only their own
   if (req.user.role !== 'admin') {
-    query.eq('created_by_member_id', req.user.sub);
+    query = query.eq('created_by_member_id', req.user.sub);
   }
 
   const { data, error } = await query;
@@ -65,7 +65,7 @@ blogsRouter.post('/', async (req, res) => {
       content,
       description,
       created_by_member_id: req.user.sub,
-      approval_status: 'PENDING',
+      approval_status: 'DRAFT',
     })
     .select()
     .single();
@@ -101,7 +101,7 @@ blogsRouter.put('/:id', async (req, res) => {
 
   const { data, error } = await supabase
     .from('blog')
-    .update({ ...parsed.data, approval_status: 'PENDING' }) // reset to pending on edit
+    .update({ ...parsed.data, approval_status: 'DRAFT' }) // reset to draft on edit
     .eq('id', req.params.id)
     .select()
     .single();

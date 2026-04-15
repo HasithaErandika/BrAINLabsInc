@@ -11,6 +11,7 @@ projectsRouter.use(requireAuth);
 const ProjectSchema = z.object({
   title:       z.string().min(1).max(255),
   description: z.string().optional().nullable(),
+  content:     z.string().optional().nullable(),
 });
 
 const DiagramSchema = z.object({ diagram_url: z.string().url().max(255) });
@@ -33,13 +34,13 @@ async function ownOrFail(projId, memberId, role, res) {
 // ─── GET /projects ────────────────────────────────────────────────────────────
 
 projectsRouter.get('/', async (req, res) => {
-  const query = supabase
+  let query = supabase
     .from('project')
-    .select('*, project_diagram(diagram_url)')
+    .select('*, project_diagram(id, diagram_url)')
     .order('created_at', { ascending: false });
 
   if (req.user.role !== 'admin') {
-    query.eq('created_by_member_id', req.user.sub);
+    query = query.eq('created_by_member_id', req.user.sub);
   }
 
   const { data, error } = await query;
@@ -58,7 +59,7 @@ projectsRouter.post('/', async (req, res) => {
     .insert({
       ...parsed.data,
       created_by_member_id: req.user.sub,
-      approval_status: 'PENDING',
+      approval_status: 'DRAFT',
     })
     .select()
     .single();
@@ -94,7 +95,7 @@ projectsRouter.put('/:id', async (req, res) => {
 
   const { data, error } = await supabase
     .from('project')
-    .update({ ...parsed.data, approval_status: 'PENDING' })
+    .update({ ...parsed.data, approval_status: 'DRAFT' })
     .eq('id', req.params.id)
     .select()
     .single();
@@ -131,4 +132,20 @@ projectsRouter.post('/:id/diagrams', async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
   res.status(201).json(data);
+});
+
+// ─── DELETE /projects/:id/diagrams/:diagId ────────────────────────────────────
+
+projectsRouter.delete('/:id/diagrams/:diagId', async (req, res) => {
+  const proj = await ownOrFail(req.params.id, req.user.sub, req.user.role, res);
+  if (!proj) return;
+
+  const { error } = await supabase
+    .from('project_diagram')
+    .delete()
+    .eq('id', req.params.diagId)
+    .eq('project_id', req.params.id);
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ message: 'Diagram removed' });
 });

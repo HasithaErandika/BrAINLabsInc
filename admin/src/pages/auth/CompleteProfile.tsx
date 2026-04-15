@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { api } from "../../lib/api";
+import { api } from "../../api";
 import { UserPlus, ArrowRight, Loader2, Info, GraduationCap, MapPin, Briefcase } from "lucide-react";
 import { FormField, FormInput, FormTextArea } from "../../components/shared/FormElements";
 
@@ -51,7 +51,7 @@ export default function CompleteProfile() {
           </div>
           <div>
             <h1 className="text-2xl font-black text-zinc-900 tracking-tight">System Onboarding</h1>
-            <p className="text-xs text-zinc-500 font-bold uppercase tracking-[0.2em] mt-1 text-indigo-600">Step 02: Researcher Identity Certification</p>
+            <p className="text-xs text-zinc-500 font-bold uppercase tracking-[0.2em] mt-1 text-zinc-600">Step 02: Researcher Identity Certification</p>
           </div>
         </div>
 

@@ -1,7 +1,26 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Loader2, AlertCircle, Shield, Mail, Lock, Briefcase } from "lucide-react";
-import { apiClient } from "../../lib/api";
+import { ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, Microscope, Users, Check, X } from "lucide-react";
+import { apiClient } from "../../api";
+
+// ── Password strength helpers ─────────────────────────────────────────────────
+
+const CRITERIA = [
+  { id: "length",    label: "At least 8 characters",       test: (p: string) => p.length >= 8 },
+  { id: "upper",     label: "One uppercase letter",         test: (p: string) => /[A-Z]/.test(p) },
+  { id: "lower",     label: "One lowercase letter",         test: (p: string) => /[a-z]/.test(p) },
+  { id: "number",    label: "One number",                   test: (p: string) => /\d/.test(p) },
+  { id: "special",   label: "One special character",        test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+];
+
+function getStrength(password: string) {
+  const passed = CRITERIA.filter(c => c.test(password)).length;
+  if (passed <= 1) return { level: 0, label: "Weak",   color: "bg-red-500" };
+  if (passed === 2) return { level: 1, label: "Fair",   color: "bg-orange-400" };
+  if (passed === 3) return { level: 2, label: "Good",   color: "bg-yellow-400" };
+  if (passed === 4) return { level: 3, label: "Strong", color: "bg-zinc-700" };
+  return               { level: 4, label: "Very Strong", color: "bg-zinc-900" };
+}
 
 export default function Register() {
   const navigate = useNavigate();
@@ -11,190 +30,334 @@ export default function Register() {
     second_name: "",
     contact_email: "",
     password: "",
-    role: "researcher"
+    role: "researcher",
   });
+
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const strength = getStrength(formData.password);
+  const passwordsMatch = confirmPassword === "" ? null : formData.password === confirmPassword;
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
+    if (strength.level < 2) {
+      setError("Please choose a stronger password (at least Good strength).");
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password !== confirmPassword) {
+      setError("Passwords do not match.");
+      setLoading(false);
+      return;
+    }
+
+
     try {
-      const res = await apiClient.post("/auth/register", formData);
-      setSuccessMsg(res.data.message || "Registration successful. Please wait for an admin to approve your account.");
+      await apiClient.post("/auth/register", {
+        first_name: formData.first_name,
+        second_name: formData.second_name,
+        contact_email: formData.contact_email,
+        password: formData.password,
+        role: formData.role,
+      });
+      setSuccess(true);
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || "Registration failed. Please try again.");
+      const raw = err.response?.data?.error;
+      let msg = "Registration failed.";
+      if (typeof raw === "string") {
+        msg = raw;
+      } else if (raw && typeof raw === "object") {
+        // Zod flatten() shape: { formErrors: [...], fieldErrors: { field: [...] } }
+        const fieldMsgs = Object.values(raw.fieldErrors ?? {}).flat() as string[];
+        const formMsgs = (raw.formErrors ?? []) as string[];
+        msg = [...formMsgs, ...fieldMsgs][0] ?? "Validation failed. Check your inputs.";
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  if (successMsg) {
-    return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 font-sans antialiased text-black">
-        <div className="w-full max-w-sm space-y-8 text-center bg-zinc-50 border border-zinc-200 p-10 rounded-xl animate-in zoom-in-95 duration-500">
-          <Shield size={48} className="mx-auto text-black" />
-          <h2 className="text-xl font-bold tracking-tight">Application Complete</h2>
-          <p className="text-zinc-500 text-xs leading-relaxed">{successMsg}</p>
-          <button
-            onClick={() => navigate("/login")}
-            className="w-full bg-black text-white hover:bg-zinc-800 py-3 px-6 font-bold text-sm rounded transition-all flex items-center justify-center gap-2 group"
-          >
-            Go to Login
-            <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
-          </button>
+  return (
+    <div className="min-h-screen flex font-['Inter']">
+      {/* ── Left panel ─────────────────────────────────────────────── */}
+      <div className="hidden lg:flex lg:w-[44%] bg-black flex-col justify-between p-14 relative overflow-hidden">
+        <div className="absolute top-1/3 -right-16 w-64 h-64 rounded-full bg-white opacity-5 blur-3xl" />
+        <div className="absolute bottom-1/4 left-0 w-48 h-48 rounded-full bg-white opacity-5 blur-3xl" />
+
+        {/* Logo */}
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="w-9 h-9 bg-white flex items-center justify-center">
+            <img src="/logo.png" alt="BrAIN Labs" className="w-7 h-7 object-contain" />
+          </div>
+          <div>
+            <p className="text-white text-[11px] font-black uppercase tracking-[0.3em] leading-none">BrAIN Labs</p>
+            <p className="text-zinc-500 text-[9px] uppercase tracking-[0.2em]">SLIIT</p>
+          </div>
+        </div>
+
+        {/* Middle */}
+        <div className="relative z-10 space-y-8">
+          <div className="space-y-5">
+            {[
+              { icon: Microscope, title: "Researcher", desc: "Create publications, events, grants and manage RA submissions." },
+              { icon: Users, title: "Research Assistant", desc: "Draft content and submit for researcher review before publishing." },
+            ].map(({ icon: Icon, title, desc }) => (
+              <div key={title} className={`flex gap-4 p-5 border rounded-xl transition-all ${formData.role === title.toLowerCase().replace(" ", "_") ? "border-zinc-500 bg-zinc-800" : "border-zinc-800"}`}>
+                <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                  <Icon size={14} className="text-zinc-300" />
+                </div>
+                <div>
+                  <p className="text-white text-xs font-bold uppercase tracking-wide">{title}</p>
+                  <p className="text-zinc-500 text-[11px] mt-1 leading-relaxed">{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom */}
+        <div className="relative z-10">
+          <p className="text-zinc-600 text-[9px] font-bold uppercase tracking-[0.3em]">
+            © {new Date().getFullYear()} BrAIN Labs Inc.
+          </p>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 font-sans antialiased text-black">
-      
-      <div className="w-full max-w-md space-y-12">
-        <div className="flex flex-col items-center space-y-6">
-          <div className="bg-white p-2 border border-zinc-100 shadow-sm rounded-xl">
-            <img 
-              src="/logo.png" 
-              alt="BrAIN Labs" 
-              className="w-12 h-12 object-contain"
-              onError={(e) => {
-                e.currentTarget.src = 'https://api.dicebear.com/7.x/initials/svg?seed=BL&backgroundColor=000000&textColor=ffffff';
-              }}
-            />
-          </div>
-          <div className="text-center space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight">Request Access</h1>
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 mt-1">Login Console</p>
-          </div>
-        </div>
+      {/* ── Right panel (form) ─────────────────────────────────────── */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-zinc-50">
+        <div className="w-full max-w-[440px] space-y-8">
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-lg flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-              <AlertCircle size={16} className="text-black shrink-0 mt-0.5" />
-              <p className="text-xs font-semibold leading-relaxed whitespace-pre-wrap">
-                {typeof error === 'string' ? error : JSON.stringify(error)}
-              </p>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5 flex-1">
-                <label className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 ml-1">First Name</label>
-                <input
-                    type="text"
-                    name="first_name"
-                    required
-                    value={formData.first_name}
-                    onChange={handleChange}
-                    placeholder="Hasitha"
-                    className="w-full bg-white border-2 border-zinc-100 px-4 py-3 text-sm transition-all focus:border-black focus:outline-none placeholder:text-zinc-200 font-medium"
-                />
-            </div>
-            <div className="space-y-1.5 flex-1">
-                <label className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 ml-1">Last Name</label>
-                <input
-                    type="text"
-                    name="second_name"
-                    required
-                    value={formData.second_name}
-                    onChange={handleChange}
-                    placeholder="Erandika"
-                    className="w-full bg-white border-2 border-zinc-100 px-4 py-3 text-sm transition-all focus:border-black focus:outline-none placeholder:text-zinc-200 font-medium"
-                />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 ml-1">Email Address</label>
-            <div className="relative">
-                <Mail size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300" />
-                <input
-                  type="email"
-                  name="contact_email"
-                  required
-                  value={formData.contact_email}
-                  onChange={handleChange}
-                  placeholder="john@example.com"
-                  className="w-full bg-white border-2 border-zinc-100 px-4 pl-11 py-3 text-sm transition-all focus:border-black focus:outline-none placeholder:text-zinc-200 font-medium"
-                />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 ml-1">Password</label>
-            <div className="relative">
-                <Lock size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300" />
-                <input
-                  type="password"
-                  name="password"
-                  required
-                  minLength={8}
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Min 8 characters"
-                  className="w-full bg-white border-2 border-zinc-100 px-4 pl-11 py-3 text-sm transition-all focus:border-black focus:outline-none placeholder:text-zinc-200 font-medium"
-                />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 ml-1">Application Role</label>
-            <div className="relative">
-                <Briefcase size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300 pointer-events-none" />
-                <select
-                  name="role"
-                  required
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="w-full bg-white border-2 border-zinc-100 px-4 pl-11 py-3 text-sm transition-all focus:border-black focus:outline-none appearance-none cursor-pointer font-medium"
-                >
-                  <option value="researcher">Researcher</option>
-                  <option value="research_assistant">Research Assistant</option>
-                </select>
-            </div>
-          </div>
-
+          {/* Back */}
           <button
-            type="submit"
-            disabled={loading}
-            className="group w-full bg-black text-white hover:bg-zinc-800 py-4 px-6 font-bold text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+            onClick={() => navigate("/login")}
+            className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-black font-medium transition-colors"
           >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <>Submit Application <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" /></>}
+            <ArrowLeft size={15} /> Back to Sign In
           </button>
-        </form>
 
-        <div className="text-center">
-            <p className="text-xs text-zinc-400 font-medium">
-                Already have an account?{' '}
-                <button
-                    onClick={() => navigate('/login')}
-                    className="text-black font-bold hover:underline ml-1"
-                >
-                    Log in
-                </button>
-            </p>
-        </div>
-
-        {/* Footer */}
-        <div className="pt-8 border-t border-zinc-100 text-center space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center justify-center gap-2 text-zinc-300">
-              <Shield size={12} />
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em]">Authorized Personnel Only</p>
+          {success ? (
+            <div className="space-y-8 text-center py-12">
+              <div className="w-16 h-16 rounded-2xl bg-zinc-100 border border-zinc-200 flex items-center justify-center mx-auto">
+                <CheckCircle2 size={28} className="text-zinc-700" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-black text-black tracking-tight">Application Submitted</h2>
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  Your access request is pending administrative approval. You'll receive an email once reviewed.
+                </p>
+              </div>
+              <button
+                onClick={() => navigate("/login")}
+                className="w-full h-12 bg-black text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-zinc-800 transition-all"
+              >
+                Return to Sign In <ArrowRight size={16} />
+              </button>
             </div>
-          </div>
-          <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-zinc-300">
-            &copy; {new Date().getFullYear()} BrAIN Labs Inc.
-          </p>
+          ) : (
+            <>
+              <div className="space-y-1">
+                <h1 className="text-3xl font-black text-black tracking-tight">Request Access</h1>
+                <p className="text-sm text-zinc-500">Submit your application to join BrAIN Labs.</p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Name row */}
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: "First Name", name: "first_name", placeholder: "Jane" },
+                    { label: "Last Name", name: "second_name", placeholder: "Smith" },
+                  ].map(f => (
+                    <div key={f.name} className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wide">{f.label}</label>
+                      <input
+                        name={f.name}
+                        required
+                        value={(formData as any)[f.name]}
+                        onChange={handleChange}
+                        placeholder={f.placeholder}
+                        className="w-full h-11 px-4 bg-white border border-zinc-200 rounded-xl text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-zinc-900 transition-all"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Email */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wide">Email Address</label>
+                  <input
+                    type="email"
+                    name="contact_email"
+                    required
+                    value={formData.contact_email}
+                    onChange={handleChange}
+                    placeholder="jane.smith@sliit.lk"
+                    className="w-full h-11 px-4 bg-white border border-zinc-200 rounded-xl text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-zinc-900 transition-all"
+                  />
+                </div>
+
+                {/* Password */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wide">Password</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      required
+                      value={formData.password}
+                      onChange={e => { handleChange(e); setPasswordTouched(true); }}
+                      placeholder="Minimum 8 characters"
+                      className="w-full h-11 px-4 pr-12 bg-white border border-zinc-200 rounded-xl text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-zinc-900 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 transition-colors"
+                    >
+                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+
+                  {/* Strength bar */}
+                  {passwordTouched && formData.password.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex gap-1 flex-1">
+                          {[0, 1, 2, 3, 4].map(i => (
+                            <div
+                              key={i}
+                              className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                                i <= strength.level ? strength.color : "bg-zinc-200"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className={`ml-3 text-[10px] font-bold uppercase tracking-wide shrink-0 ${
+                          strength.level <= 1 ? "text-red-500" :
+                          strength.level === 2 ? "text-yellow-500" :
+                          "text-zinc-900"
+                        }`}>
+                          {strength.label}
+                        </span>
+                      </div>
+
+                      {/* Criteria checklist */}
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                        {CRITERIA.map(c => {
+                          const ok = c.test(formData.password);
+                          return (
+                            <div key={c.id} className="flex items-center gap-1.5">
+                              {ok
+                                ? <Check size={11} className="text-zinc-700 shrink-0" />
+                                : <X size={11} className="text-zinc-300 shrink-0" />}
+                              <span className={`text-[10px] ${ok ? "text-zinc-900" : "text-zinc-400"}`}>
+                                {c.label}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Confirm password */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wide">Confirm Password</label>
+                  <div className="relative">
+                    <input
+                      type={showConfirm ? "text" : "password"}
+                      required
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter your password"
+                      className={`w-full h-11 px-4 pr-12 bg-white border rounded-xl text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-black/10 transition-all ${
+                        passwordsMatch === null
+                          ? "border-zinc-200 focus:border-zinc-900"
+                          : passwordsMatch
+                          ? "border-zinc-400 focus:border-zinc-900"
+                          : "border-red-300 focus:border-red-400"
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm(v => !v)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 transition-colors"
+                    >
+                      {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+                  {passwordsMatch === false && (
+                    <p className="text-[11px] text-red-500 font-medium">Passwords do not match.</p>
+                  )}
+                  {passwordsMatch === true && (
+                    <p className="text-[11px] text-zinc-900 font-medium flex items-center gap-1">
+                      <Check size={11} /> Passwords match
+                    </p>
+                  )}
+                </div>
+
+                {/* Role */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wide">I am a</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: "researcher", label: "Researcher" },
+                      { value: "research_assistant", label: "Research Assistant" },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, role: opt.value }))}
+                        className={`h-11 rounded-xl border text-xs font-bold transition-all ${
+                          formData.role === opt.value
+                            ? "bg-black text-white border-black"
+                            : "bg-white text-zinc-600 border-zinc-200 hover:border-zinc-400"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+
+                {error && (
+                  <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
+                    <p className="text-xs font-semibold text-red-600">{error}</p>
+                  </div>
+                )}
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-12 bg-black text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-zinc-800 disabled:opacity-50 transition-all"
+                >
+                  {loading ? (
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>Submit Application <ArrowRight size={16} /></>
+                  )}
+                </button>
+              </form>
+            </>
+          )}
         </div>
       </div>
     </div>

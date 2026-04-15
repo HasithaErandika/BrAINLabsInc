@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import type { MemberRole } from "../../lib/api";
+import type { MemberRole } from "../../types";
 import { ShieldOff } from "lucide-react";
 
 interface RoleGuardProps {

@@ -6,7 +6,12 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { token } = useAuth();
+  const { token, _hasHydrated } = useAuth();
+
+  // Wait for store hydration before deciding on redirects
+  if (!_hasHydrated) {
+    return null;
+  }
 
   if (!token) {
     return <Navigate to="/login" replace />;
