@@ -18,10 +18,18 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   // Research assistants who haven't selected a supervisor yet
-  // must be redirected until they complete setup (and admin approves)
+  // are given role "pending_setup" in their JWT.
+  if (user?.role === "pending_setup") {
+    const currentPath = window.location.pathname;
+    if (!currentPath.startsWith("/setup")) {
+      return <Navigate to="/setup/supervisor" replace />;
+    }
+  }
+
+  // Research assistants who have a supervisor but admin hasn't approved yet
   if (
     user?.role === "research_assistant" &&
-    !(user as any).assigned_by_researcher_id &&
+    !user.assigned_by_researcher_id &&
     user?.approval_status === "PENDING_ADMIN"
   ) {
     const currentPath = window.location.pathname;

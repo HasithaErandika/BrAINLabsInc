@@ -148,9 +148,15 @@ meRouter.delete('/ongoing-research/:id', requireRole('researcher', 'admin'), asy
   res.json({ message: 'Ongoing research entry removed' });
 });
 
-// ─── PATCH /me/supervisor (research_assistant only) ───────────────────────────
+// ─── PATCH /me/supervisor — UPSERT (first setup OR re-assignment) ─────────────
+// Allowed for pending_setup (first time) AND research_assistant (re-assignment)
 
-meRouter.patch('/supervisor', requireRole('research_assistant'), async (req, res) => {
+meRouter.patch('/supervisor', async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+  if (req.user.role !== 'research_assistant' && req.user.role !== 'pending_setup') {
+    return res.status(403).json({ error: 'Only research assistants can set a supervisor' });
+  }
+
   const { assigned_by_researcher_id } = req.body;
 
   if (!assigned_by_researcher_id || typeof assigned_by_researcher_id !== 'number') {
@@ -168,10 +174,13 @@ meRouter.patch('/supervisor', requireRole('research_assistant'), async (req, res
     return res.status(404).json({ error: 'Researcher not found' });
   }
 
+  // UPSERT: insert row if first setup, update if already exists
   const { error } = await supabase
     .from('research_assistant')
-    .update({ assigned_by_researcher_id })
-    .eq('member_id', req.user.sub);
+    .upsert(
+      { member_id: req.user.sub, assigned_by_researcher_id, approval_status: 'PENDING_ADMIN' },
+      { onConflict: 'member_id' }
+    );
 
   if (error) return res.status(500).json({ error: error.message });
 

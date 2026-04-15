@@ -14,7 +14,7 @@ const RegisterSchema = z.object({
   contact_email:             z.string().email().max(150),
   password:                  z.string().min(8).max(255),
   role:                      z.enum(['researcher', 'research_assistant']),
-  assigned_by_researcher_id: z.number().int().positive().nullable().optional(),
+  assigned_by_researcher_id: z.coerce.number().int().min(1).nullable().optional(),
 });
 
 
@@ -75,22 +75,18 @@ authRouter.post('/register', async (req, res) => {
     return res.status(500).json({ error: 'Failed to create member profile.' });
   }
 
-  // 4. Insert role-specific row
-  const roleData = { member_id: member.id };
-  if (role === 'research_assistant' && assigned_by_researcher_id) {
-    roleData.assigned_by_researcher_id = assigned_by_researcher_id;
+  // 4. Insert role-specific row (skip for RA without supervisor — they'll complete setup post-login)
+  if (role === 'researcher') {
+    const roleData = { member_id: member.id };
+    const { error: roleError } = await supabase.from('researcher').insert(roleData);
+    if (roleError) {
+      console.error('[RegistrationError] Researcher Insert:', roleError);
+      await supabase.auth.admin.deleteUser(authUserId);
+      return res.status(500).json({ error: 'An unexpected error occurred while assigning your role.' });
+    }
   }
-
-  const roleTable = role === 'researcher' ? 'researcher' : 'research_assistant';
-  const { error: roleError } = await supabase
-    .from(roleTable)
-    .insert(roleData);
-
-  if (roleError) {
-    console.error('[RegistrationError] Role Insert:', roleError);
-    await supabase.auth.admin.deleteUser(authUserId);
-    return res.status(500).json({ error: 'An unexpected error occurred while assigning your role.' });
-  }
+  // For research_assistant we defer the row insertion until they select a supervisor
+  // via POST /setup/supervisor after first login.
 
   return res.status(201).json({
     message: 'Registration successful. Your account is pending admin approval.',
@@ -129,7 +125,24 @@ authRouter.post('/login', async (req, res) => {
 
   const { member, role, roleRow } = memberData;
 
-  // 3. Handle status-based access (Admins are implicitly approved)
+  // 3. Handle status-based access
+  if (role === 'pending_setup') {
+    // RA who hasn't selected a supervisor yet — allow login but mark as pending_setup
+    const token = signToken({ sub: member.id, role: 'pending_setup', email: member.contact_email, slug: member.slug });
+    return res.json({
+      token,
+      user: {
+        id: member.id,
+        first_name: member.first_name,
+        second_name: member.second_name,
+        email: member.contact_email,
+        slug: member.slug,
+        role: 'pending_setup',
+        approval_status: null,
+      },
+    });
+  }
+
   if (role !== 'admin' && roleRow?.approval_status === 'REJECTED') {
     return res.status(403).json({ error: 'Account access denied. Your application was rejected.' });
   }

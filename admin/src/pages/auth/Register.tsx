@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, Microscope, Users, Check, X } from "lucide-react";
 import { apiClient } from "../../api";
@@ -18,8 +18,8 @@ function getStrength(password: string) {
   if (passed <= 1) return { level: 0, label: "Weak",   color: "bg-red-500" };
   if (passed === 2) return { level: 1, label: "Fair",   color: "bg-orange-400" };
   if (passed === 3) return { level: 2, label: "Good",   color: "bg-yellow-400" };
-  if (passed === 4) return { level: 3, label: "Strong", color: "bg-emerald-500" };
-  return               { level: 4, label: "Very Strong", color: "bg-emerald-600" };
+  if (passed === 4) return { level: 3, label: "Strong", color: "bg-zinc-700" };
+  return               { level: 4, label: "Very Strong", color: "bg-zinc-900" };
 }
 
 export default function Register() {
@@ -38,7 +38,6 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
-  const [researchers, setResearchers] = useState<{id: number, first_name: string, second_name: string}[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -46,9 +45,6 @@ export default function Register() {
   const strength = getStrength(formData.password);
   const passwordsMatch = confirmPassword === "" ? null : formData.password === confirmPassword;
 
-  useEffect(() => {
-    apiClient.get("/public/researchers").then(r => setResearchers(r.data)).catch(() => {});
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,12 +67,21 @@ export default function Register() {
     try {
       await apiClient.post("/auth/register", {
         ...formData,
-        assigned_by_researcher_id:
-          formData.role === "research_assistant" ? Number(formData.assigned_by_researcher_id) : null,
+        assigned_by_researcher_id: null,
       });
       setSuccess(true);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Registration failed.");
+      const raw = err.response?.data?.error;
+      let msg = "Registration failed.";
+      if (typeof raw === "string") {
+        msg = raw;
+      } else if (raw && typeof raw === "object") {
+        // Zod flatten() shape: { formErrors: [...], fieldErrors: { field: [...] } }
+        const fieldMsgs = Object.values(raw.fieldErrors ?? {}).flat() as string[];
+        const formMsgs = (raw.formErrors ?? []) as string[];
+        msg = [...formMsgs, ...fieldMsgs][0] ?? "Validation failed. Check your inputs.";
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -90,8 +95,8 @@ export default function Register() {
     <div className="min-h-screen flex font-['Inter']">
       {/* ── Left panel ─────────────────────────────────────────────── */}
       <div className="hidden lg:flex lg:w-[44%] bg-black flex-col justify-between p-14 relative overflow-hidden">
-        <div className="absolute top-1/3 -right-16 w-64 h-64 rounded-full bg-violet-600 opacity-20 blur-3xl" />
-        <div className="absolute bottom-1/4 left-0 w-48 h-48 rounded-full bg-blue-500 opacity-15 blur-3xl" />
+        <div className="absolute top-1/3 -right-16 w-64 h-64 rounded-full bg-white opacity-5 blur-3xl" />
+        <div className="absolute bottom-1/4 left-0 w-48 h-48 rounded-full bg-white opacity-5 blur-3xl" />
 
         {/* Logo */}
         <div className="relative z-10 flex items-center gap-3">
@@ -111,7 +116,7 @@ export default function Register() {
               { icon: Microscope, title: "Researcher", desc: "Create publications, events, grants and manage RA submissions." },
               { icon: Users, title: "Research Assistant", desc: "Draft content and submit for researcher review before publishing." },
             ].map(({ icon: Icon, title, desc }) => (
-              <div key={title} className={`flex gap-4 p-5 border rounded-xl transition-all ${formData.role === title.toLowerCase().replace(" ", "_") ? "border-violet-500/50 bg-violet-500/10" : "border-zinc-800"}`}>
+              <div key={title} className={`flex gap-4 p-5 border rounded-xl transition-all ${formData.role === title.toLowerCase().replace(" ", "_") ? "border-zinc-500 bg-zinc-800" : "border-zinc-800"}`}>
                 <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
                   <Icon size={14} className="text-zinc-300" />
                 </div>
@@ -146,8 +151,8 @@ export default function Register() {
 
           {success ? (
             <div className="space-y-8 text-center py-12">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto">
-                <CheckCircle2 size={28} className="text-emerald-500" />
+              <div className="w-16 h-16 rounded-2xl bg-zinc-100 border border-zinc-200 flex items-center justify-center mx-auto">
+                <CheckCircle2 size={28} className="text-zinc-700" />
               </div>
               <div className="space-y-2">
                 <h2 className="text-2xl font-black text-black tracking-tight">Application Submitted</h2>
@@ -243,7 +248,7 @@ export default function Register() {
                         <span className={`ml-3 text-[10px] font-bold uppercase tracking-wide shrink-0 ${
                           strength.level <= 1 ? "text-red-500" :
                           strength.level === 2 ? "text-yellow-500" :
-                          "text-emerald-600"
+                          "text-zinc-900"
                         }`}>
                           {strength.label}
                         </span>
@@ -256,9 +261,9 @@ export default function Register() {
                           return (
                             <div key={c.id} className="flex items-center gap-1.5">
                               {ok
-                                ? <Check size={11} className="text-emerald-500 shrink-0" />
+                                ? <Check size={11} className="text-zinc-700 shrink-0" />
                                 : <X size={11} className="text-zinc-300 shrink-0" />}
-                              <span className={`text-[10px] ${ok ? "text-emerald-600" : "text-zinc-400"}`}>
+                              <span className={`text-[10px] ${ok ? "text-zinc-900" : "text-zinc-400"}`}>
                                 {c.label}
                               </span>
                             </div>
@@ -283,7 +288,7 @@ export default function Register() {
                         passwordsMatch === null
                           ? "border-zinc-200 focus:border-zinc-900"
                           : passwordsMatch
-                          ? "border-emerald-400 focus:border-emerald-500"
+                          ? "border-zinc-400 focus:border-zinc-900"
                           : "border-red-300 focus:border-red-400"
                       }`}
                     />
@@ -299,7 +304,7 @@ export default function Register() {
                     <p className="text-[11px] text-red-500 font-medium">Passwords do not match.</p>
                   )}
                   {passwordsMatch === true && (
-                    <p className="text-[11px] text-emerald-600 font-medium flex items-center gap-1">
+                    <p className="text-[11px] text-zinc-900 font-medium flex items-center gap-1">
                       <Check size={11} /> Passwords match
                     </p>
                   )}
