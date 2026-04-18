@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { BookOpen, Calendar, Users, Bookmark, ArrowRight, Info, ExternalLink } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { api } from "../../api";
@@ -22,6 +23,9 @@ const TYPE_LABELS: Record<PublicationType, string> = {
 
 export default function PublicationsPage() {
   const { isAdmin, isResearcher } = useAuth();
+  const [searchParams] = useSearchParams();
+  const initialId = searchParams.get("id");
+
   const [items, setItems] = useState<Publication[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -94,6 +98,11 @@ export default function PublicationsPage() {
     await fetchItems();
   };
 
+  const handleDelete = async (item: Publication) => {
+    await api.publications.delete(item.id);
+    await fetchItems();
+  };
+
   return (
     <ContentPageTemplate<Publication>
       title="Publications"
@@ -108,6 +117,8 @@ export default function PublicationsPage() {
       onSubmitForReview={handleSubmitForReview}
       onReview={handleReview}
       onToggleStatus={isAdmin() ? handleToggleStatus : undefined}
+      onDelete={handleDelete}
+      initialSelectedId={initialId ? Number(initialId) : null}
       searchFields={(item) => [item.title, item.authors ?? "", item.type ?? ""]}
       filterOptions={[
         { label: "ALL", value: "ALL" },
@@ -284,6 +295,7 @@ export default function PublicationsPage() {
 
                 <Input
                   label="URL / Link"
+                  type="url"
                   placeholder="https://doi.org/..."
                   value={subtypeData.link ?? ""}
                   onChange={e => setSubtype({ link: e.target.value })}

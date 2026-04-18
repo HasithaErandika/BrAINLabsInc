@@ -33,6 +33,7 @@ interface RA {
   approval_status: string;
   already_mine?: boolean;
   assigned_by_researcher_id?: number | null;
+  assigned_projects?: { id: number; title: string }[];
 }
 
 export function ResearcherDashboard({ memberId }: { memberId: number }) {
@@ -40,6 +41,8 @@ export function ResearcherDashboard({ memberId }: { memberId: number }) {
   const [stats, setStats] = useState<Stats>({
     publications: 0, projects: 0, grants: 0, completeness: 0, pendingReview: 0,
   });
+  const [profile, setProfile] = useState<any>(null);
+  const [pendingItems, setPendingItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // My assistants
@@ -53,17 +56,21 @@ export function ResearcherDashboard({ memberId }: { memberId: number }) {
   const [searchResults, setSearchResults]     = useState<RA[]>([]);
   const [searchLoading, setSearchLoading]     = useState(false);
   const [assigningId, setAssigningId]         = useState<number | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
   // ── Stats
   useEffect(() => {
     (async () => {
       try {
-        const [pubs, projs, grants, profile] = await Promise.all([
+        const [pubs, projs, grants, blogs, tuts, profile] = await Promise.all([
           api.publications.list(),
           api.projects.list(),
           api.grants.list(),
+          api.blogs.list(),
+          api.tutorials.list(),
           api.me.get(),
         ]);
+        setProfile(profile);
         const rd = profile.role_detail;
         const sections = [
           !!rd?.country, !!rd?.linkedin_url, !!rd?.image_url,
@@ -76,8 +83,22 @@ export function ResearcherDashboard({ memberId }: { memberId: number }) {
           completeness: Math.round((sections.filter(Boolean).length / sections.length) * 100),
           pendingReview:
             pubs.filter((p: any) => p.approval_status === "PENDING_RESEARCHER").length +
-            projs.filter((p: any) => p.approval_status === "PENDING_RESEARCHER").length,
+            projs.filter((p: any) => p.approval_status === "PENDING_RESEARCHER").length +
+            blogs.filter((b: any) => b.approval_status === "PENDING_RESEARCHER").length +
+            tuts.filter((t: any) => t.approval_status === "PENDING_RESEARCHER").length,
         });
+
+        const collect = (arr: any[], type: string, href: string) =>
+          arr
+            .filter(x => x.approval_status === "PENDING_RESEARCHER")
+            .map(x => ({ ...x, type, href: `${href}?id=${x.id}` }));
+        
+        setPendingItems([
+          ...collect(pubs, "Publication", "/publications"),
+          ...collect(projs, "Project", "/projects"),
+          ...collect(blogs, "Blog", "/blog"),
+          ...collect(tuts, "Tutorial", "/tutorials"),
+        ]);
       } catch (e) {
         console.error(e);
       } finally {
@@ -127,7 +148,7 @@ export function ResearcherDashboard({ memberId }: { memberId: number }) {
   const handleAssign = async (ra: RA) => {
     setAssigningId(ra.id);
     try {
-      await api.me.assignAssistant(ra.member_id);
+      await api.me.assignAssistant(ra.member_id, selectedProjectId || undefined);
       // Refresh both lists
       fetchAssistants();
       setSearchResults(prev => prev.map(r =>
@@ -182,23 +203,40 @@ export function ResearcherDashboard({ memberId }: { memberId: number }) {
         </div>
       </div>
 
-      {/* ── Pending review alert ─────────────────────────────────────────── */}
-      {!loading && stats.pendingReview > 0 && (
-        <div className="flex items-center justify-between px-5 py-4 bg-zinc-900 text-white rounded-xl">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-              <Clock size={14} className="text-white" />
+      {/* ── Pending review queue ─────────────────────────────────────────── */}
+      {!loading && pendingItems.length > 0 && (
+        <div className="bg-zinc-900 text-white rounded-2xl overflow-hidden border border-white/5">
+          <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                <Clock size={14} className="text-white" />
+              </div>
+              <h2 className="text-sm font-semibold">Submissions for Review</h2>
             </div>
-            <div>
-              <p className="text-sm font-semibold">
-                {stats.pendingReview} submission{stats.pendingReview !== 1 ? "s" : ""} awaiting your review
-              </p>
-              <p className="text-xs text-zinc-400 mt-0.5">Review and forward to admin, or reject</p>
-            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 bg-white/10 rounded-full">
+              {pendingItems.length} items
+            </span>
           </div>
-          <Link to="/publications" className="flex items-center gap-1 text-xs font-semibold text-zinc-300 hover:text-white transition-colors shrink-0">
-            Review <ArrowRight size={12} />
-          </Link>
+          <div className="divide-y divide-white/5 max-h-[300px] overflow-y-auto">
+            {pendingItems.map(item => (
+              <Link
+                key={`${item.type}-${item.id}`}
+                to={item.href}
+                className="flex items-center gap-4 px-6 py-3.5 hover:bg-white/5 transition-colors group"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate group-hover:text-zinc-300 transition-colors">
+                    {item.title}
+                  </p>
+                  <p className="text-[10px] text-zinc-500 mt-0.5">
+                    {item.type} · {item.created_at?.split('T')[0]}
+                  </p>
+                </div>
+                <Badge status="PENDING_RESEARCHER" />
+                <ArrowRight size={13} className="text-zinc-600 group-hover:text-white transition-all ml-2" />
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 
@@ -262,6 +300,22 @@ export function ResearcherDashboard({ memberId }: { memberId: number }) {
                 onChange={e => setSearchQ(e.target.value)}
                 className="input-monochrome pl-9 text-sm"
               />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1">
+                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight mb-1 ml-1">Assign to specific research (optional)</p>
+                <select 
+                  className="w-full px-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/5 transition-all"
+                  value={selectedProjectId || ""}
+                  onChange={e => setSelectedProjectId(e.target.value ? Number(e.target.value) : null)}
+                >
+                  <option value="">-- No specific project --</option>
+                  {(profile?.role_detail?.ongoing_research || []).map((res: any) => (
+                    <option key={res.id} value={res.id}>{res.title}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="max-h-60 overflow-y-auto rounded-xl border border-zinc-200 bg-white divide-y divide-zinc-50">
@@ -349,6 +403,15 @@ export function ResearcherDashboard({ memberId }: { memberId: number }) {
                     <a href={`mailto:${ra.contact_email}`} className="text-[11px] text-zinc-400 hover:text-zinc-700 mt-0.5 flex items-center gap-1 transition-colors">
                       <Mail size={10} /> {ra.contact_email}
                     </a>
+                  )}
+                  {ra.assigned_projects && ra.assigned_projects.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {ra.assigned_projects.map(p => (
+                        <span key={p.id} className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-zinc-100 text-[9px] font-medium text-zinc-500 rounded border border-zinc-200">
+                          <FlaskConical size={8} /> {p.title}
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </div>
                 <Badge status={ra.approval_status as any} />

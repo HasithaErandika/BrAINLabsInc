@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { FlaskConical, ArrowRight, ImageIcon } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { api } from "../../api";
@@ -12,6 +13,9 @@ import { renderMarkdown } from "../../lib/utils/markdown";
 
 export default function ProjectsPage() {
   const { isAdmin, isResearcher } = useAuth();
+  const [searchParams] = useSearchParams();
+  const initialId = searchParams.get("id");
+
   const [items, setItems] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,6 +62,11 @@ export default function ProjectsPage() {
     await fetchItems();
   };
 
+  const handleDelete = async (item: Project) => {
+    await api.projects.delete(item.id);
+    await fetchItems();
+  };
+
   return (
     <ContentPageTemplate<Project>
       title="Projects"
@@ -72,6 +81,8 @@ export default function ProjectsPage() {
       onSubmitForReview={handleSubmitForReview}
       onReview={handleReview}
       onToggleStatus={isAdmin() ? handleToggleStatus : undefined}
+      onDelete={handleDelete}
+      initialSelectedId={initialId ? Number(initialId) : null}
       searchFields={item => [item.title, item.description || ""]}
       filterOptions={[
         { label: "All", value: "ALL" },

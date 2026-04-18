@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { CalendarDays, MapPin, Clock, Users, ArrowRight } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { api } from "../../api";
@@ -9,6 +10,9 @@ import { Badge } from "../../components/ui/Badge";
 
 export default function EventsPage() {
   const { isAdmin, isResearcher } = useAuth();
+  const [searchParams] = useSearchParams();
+  const initialId = searchParams.get("id");
+
   const [items, setItems] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,6 +61,11 @@ export default function EventsPage() {
     await fetchItems();
   };
 
+  const handleDelete = async (item: Event) => {
+    await api.events.delete(item.id);
+    await fetchItems();
+  };
+
   return (
     <ContentPageTemplate<Event>
       title="Events"
@@ -71,6 +80,8 @@ export default function EventsPage() {
       onSubmitForReview={handleSubmitForReview}
       onReview={handleReview}
       onToggleStatus={isAdmin() ? handleToggleStatus : undefined}
+      onDelete={handleDelete}
+      initialSelectedId={initialId ? Number(initialId) : null}
       searchFields={(item) => [item.title, item.description || "", item.premises]}
       filterOptions={[
         { label: "All", value: "ALL" },

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Plus, Search, ArrowLeft, SlidersHorizontal } from "lucide-react";
+import { Plus, Search, ArrowLeft, SlidersHorizontal, X } from "lucide-react";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 
@@ -18,12 +18,15 @@ interface ContentPageTemplateProps<T> {
   searchFields: (item: T) => string[];
   filterOptions?: { label: string; value: string }[];
   renderDetail: (item: T) => ReactNode;
-  onSubmitForReview?: (item: T) => void;
-  onReview?: (item: T, status: 'PENDING_ADMIN' | 'REJECTED') => void;
-  onToggleStatus?: (item: T) => void;
   renderEdit: (item: Partial<T>, setItem: (p: Partial<T>) => void, onSave: () => void) => ReactNode;
   emptyItem: Partial<T>;
   onSave: (item: Partial<T>) => Promise<void>;
+  onSubmitForReview?: (item: T) => Promise<void>;
+  onReview?: (item: T, status: 'PENDING_ADMIN' | 'REJECTED') => Promise<void>;
+  onToggleStatus?: (item: T) => Promise<void>;
+  onDelete?: (item: T) => Promise<void>;
+  initialSearch?: string;
+  initialSelectedId?: string | number | null;
 }
 
 export function ContentPageTemplate<
@@ -32,14 +35,16 @@ export function ContentPageTemplate<
   title, subtitle, icon: Icon, items, loading, isAdmin, isResearcher,
   renderListItem, searchFields, filterOptions,
   renderDetail, renderEdit, emptyItem, onSave,
-  onSubmitForReview, onReview, onToggleStatus,
+  onSubmitForReview, onReview, onToggleStatus, onDelete, initialSearch = "", initialSelectedId = null
 }: ContentPageTemplateProps<T>) {
-  const [view, setView] = useState<ContentPageView>("list");
-  const [selectedId, setSelectedId] = useState<string | number | null>(null);
+  const [view, setView] = useState<ContentPageView>(initialSelectedId ? "detail" : "list");
+  const [selectedId, setSelectedId] = useState<string | number | null>(initialSelectedId);
   const [editingItem, setEditingItem] = useState<Partial<T>>(emptyItem);
   const [saving, setSaving] = useState(false);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [filter, setFilter] = useState("ALL");
+  const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const selectedItem = items.find(i => i.id === selectedId) || null;
 
@@ -48,9 +53,32 @@ export function ContentPageTemplate<
 
   const handleSaveInternal = async () => {
     setSaving(true);
-    try { await onSave(editingItem); setView("list"); setSelectedId(null); }
-    catch (err) { console.error("Save failed:", err); }
+    setError(null);
+    try { 
+      await onSave(editingItem); 
+      setView("list"); 
+      setSelectedId(null); 
+    }
+    catch (err: any) { 
+      setError(err?.response?.data?.error || err.message || "Save failed"); 
+    }
     finally { setSaving(false); }
+  };
+
+  const handleAction = async (name: string, fn: () => Promise<void>) => {
+    setActionLoading(name);
+    setError(null);
+    try {
+      await fn();
+      if (view === "edit") {
+        setView("list");
+        setSelectedId(null);
+      }
+    } catch (err: any) {
+      setError(err?.response?.data?.error || err.message || `${name} failed`);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const filteredItems = items.filter(item => {
@@ -83,6 +111,17 @@ export function ContentPageTemplate<
             </button>
           )}
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-xs font-semibold text-red-600 flex items-center gap-3 animate-enter">
+            <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+            {error}
+            <button onClick={() => setError(null)} className="ml-auto text-zinc-400 hover:text-zinc-600">
+              <X size={14} />
+            </button>
+          </div>
+        )}
 
         {/* Search + filter */}
         <div className="flex flex-col sm:flex-row gap-3">
@@ -159,35 +198,69 @@ export function ContentPageTemplate<
             <ArrowLeft size={15} /> Back to {title}
           </button>
           <div className="flex items-center gap-2">
-            {status === "DRAFT" && !isAdmin && (
+            {(status === "DRAFT" || (isResearcher && status === "PENDING_RESEARCHER") || isAdmin) && (
               <Button variant="outline" onClick={() => handleEdit(selectedItem)} className="h-8 px-3 text-xs">
                 Edit
               </Button>
             )}
+            {((status === "DRAFT" && !isAdmin) || isAdmin) && onDelete && (
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to delete this?")) {
+                    handleAction("Delete", async () => onDelete(selectedItem));
+                  }
+                }}
+                isLoading={actionLoading === "Delete"}
+                className="h-8 px-3 text-xs border-red-200 text-red-600 hover:bg-red-50"
+              >
+                Delete
+              </Button>
+            )}
             {status === "DRAFT" && onSubmitForReview && !isAdmin && (
-              <Button onClick={() => onSubmitForReview(selectedItem)} className="h-8 px-3 text-xs">
+              <Button 
+                onClick={() => handleAction("Submit", async () => onSubmitForReview(selectedItem))} 
+                isLoading={actionLoading === "Submit"}
+                className="h-8 px-3 text-xs"
+              >
                 Submit for review
               </Button>
             )}
             {isResearcher && status === "PENDING_RESEARCHER" && !isAdmin && onReview && (
               <>
-                <Button variant="outline" onClick={() => onReview(selectedItem, 'REJECTED')}
-                  className="h-8 px-3 text-xs border-red-200 text-red-600 hover:bg-red-50">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleAction("Reject", async () => onReview(selectedItem, 'REJECTED'))}
+                  isLoading={actionLoading === "Reject"}
+                  className="h-8 px-3 text-xs border-red-200 text-red-600 hover:bg-red-50"
+                >
                   Reject
                 </Button>
-                <Button onClick={() => onReview(selectedItem, 'PENDING_ADMIN')} className="h-8 px-3 text-xs">
+                <Button 
+                  onClick={() => handleAction("Forward", async () => onReview(selectedItem, 'PENDING_ADMIN'))} 
+                  isLoading={actionLoading === "Forward"}
+                  className="h-8 px-3 text-xs"
+                >
                   Forward to admin
                 </Button>
               </>
             )}
             {isAdmin && onToggleStatus && (
               status === "APPROVED" ? (
-                <Button variant="outline" onClick={() => onToggleStatus(selectedItem)}
-                  className="h-8 px-3 text-xs border-red-200 text-red-600 hover:bg-red-50">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleAction("Revoke", async () => onToggleStatus(selectedItem))}
+                  isLoading={actionLoading === "Revoke"}
+                  className="h-8 px-3 text-xs border-red-200 text-red-600 hover:bg-red-50"
+                >
                   Revoke
                 </Button>
               ) : status === "PENDING_ADMIN" ? (
-                <Button onClick={() => onToggleStatus(selectedItem)} className="h-8 px-3 text-xs">
+                <Button 
+                  onClick={() => handleAction("Approve", async () => onToggleStatus(selectedItem))} 
+                  isLoading={actionLoading === "Approve"}
+                  className="h-8 px-3 text-xs"
+                >
                   Approve
                 </Button>
               ) : null
@@ -227,6 +300,13 @@ export function ContentPageTemplate<
             {isNew ? "Save draft" : "Save changes"}
           </Button>
         </div>
+
+        {error && (
+          <div className="max-w-2xl mx-auto p-4 rounded-xl border border-red-200 bg-red-50 text-xs font-semibold text-red-600 flex items-center gap-3 animate-enter">
+            <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+            {error}
+          </div>
+        )}
 
         <div className="max-w-2xl mx-auto space-y-6 pb-16">
           <div>

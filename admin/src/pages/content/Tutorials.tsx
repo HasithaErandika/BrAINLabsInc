@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { GraduationCap, BookOpen, Calendar } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { api } from "../../api";
@@ -11,6 +12,9 @@ import { renderMarkdown } from "../../lib/utils/markdown";
 
 export default function TutorialsPage() {
   const { isAdmin, isResearcher } = useAuth();
+  const [searchParams] = useSearchParams();
+  const initialId = searchParams.get("id");
+
   const [items, setItems] = useState<Tutorial[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,6 +61,11 @@ export default function TutorialsPage() {
     await fetchItems();
   };
 
+  const handleDelete = async (item: Tutorial) => {
+    await api.tutorials.delete(item.id);
+    await fetchItems();
+  };
+
   return (
     <ContentPageTemplate<Tutorial>
       title="Tutorials"
@@ -71,6 +80,8 @@ export default function TutorialsPage() {
       onSubmitForReview={handleSubmitForReview}
       onReview={handleReview}
       onToggleStatus={isAdmin() ? handleToggleStatus : undefined}
+      onDelete={handleDelete}
+      initialSelectedId={initialId ? Number(initialId) : null}
       searchFields={(item) => [item.title, item.description || ""]}
       filterOptions={[
         { label: "All", value: "ALL" },

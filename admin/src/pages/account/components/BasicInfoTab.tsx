@@ -134,12 +134,24 @@ export function BasicInfoTab({ cv, onUpdate, isEditing }: Props) {
             <label className="text-xs font-semibold text-zinc-600 uppercase tracking-tight">LINKEDIN URL</label>
             <div className="relative flex items-center">
                <Linkedin size={16} className="absolute left-4 text-zinc-400" />
-               <input className="w-full bg-zinc-50 border border-zinc-200 rounded-xl pl-11 pr-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:bg-white" value={formData.linkedin_url} onChange={e => setFormData({ ...formData, linkedin_url: e.target.value })} placeholder="https://linkedin.com/..." />
+               <input 
+                 type="url"
+                 className="w-full bg-zinc-50 border border-zinc-200 rounded-xl pl-11 pr-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:bg-white" 
+                 value={formData.linkedin_url} 
+                 onChange={e => setFormData({ ...formData, linkedin_url: e.target.value })} 
+                 placeholder="https://linkedin.com/..." 
+               />
             </div>
           </div>
 
           <div className="md:col-span-2">
-            <Input label="AVATAR RESOURCE LOCATION" value={formData.image_url} onChange={e => setFormData({ ...formData, image_url: e.target.value })} placeholder="https://..." />
+            <Input 
+              label="AVATAR RESOURCE LOCATION" 
+              type="url"
+              value={formData.image_url} 
+              onChange={e => setFormData({ ...formData, image_url: e.target.value })} 
+              placeholder="https://..." 
+            />
           </div>
 
           <div className="md:col-span-2 space-y-1.5">

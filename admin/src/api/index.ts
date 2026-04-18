@@ -6,7 +6,7 @@ import type {
   BaseMember, EducationalBackground, OngoingResearch
 } from '../types';
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5173';
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -84,7 +84,8 @@ export const api = {
     myAssistants: () => apiClient.get<any[]>('/me/my-assistants').then(data),
     removeAssistant: (raId: number) => apiClient.delete(`/me/my-assistants/${raId}`).then(data),
     availableAssistants: (q?: string) => apiClient.get<any[]>(`/me/available-assistants${q ? `?q=${encodeURIComponent(q)}` : ''}`).then(data),
-    assignAssistant: (ra_member_id: number) => apiClient.post('/me/my-assistants', { ra_member_id }).then(data),
+    assignAssistant: (ra_member_id: number, research_id?: number) => 
+      apiClient.post('/me/my-assistants', { ra_member_id, research_id }).then(data),
   },
   admin: {
     getMembers: () => apiClient.get<BaseMember[]>('/admin/members').then(data),

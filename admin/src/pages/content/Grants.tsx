@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Briefcase, Calendar, FileText, ArrowRight, ExternalLink } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { api } from "../../api";
@@ -11,6 +12,9 @@ import { Button } from "../../components/ui/Button";
 
 export default function GrantsPage() {
   const { isAdmin, isResearcher } = useAuth();
+  const [searchParams] = useSearchParams();
+  const initialId = searchParams.get("id");
+
   const [items, setItems] = useState<Grant[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,6 +62,11 @@ export default function GrantsPage() {
     await fetchItems();
   };
 
+  const handleDelete = async (item: Grant) => {
+    await api.grants.delete(item.id);
+    await fetchItems();
+  };
+
   const formatDate = (d?: string) =>
     d ? new Date(d).toLocaleDateString(undefined, { dateStyle: "medium" }) : "—";
 
@@ -75,6 +84,8 @@ export default function GrantsPage() {
       onSubmitForReview={handleSubmitForReview}
       onReview={handleReview}
       onToggleStatus={isAdmin() ? handleToggleStatus : undefined}
+      onDelete={handleDelete}
+      initialSelectedId={initialId ? Number(initialId) : null}
       searchFields={(item) => [item.title, item.description || ""]}
       filterOptions={[
         { label: "All", value: "ALL" },

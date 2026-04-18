@@ -16,7 +16,7 @@ interface Stats { users: number; publications: number; blog: number; pending: nu
 interface PendingItem { id: string; title: string; type: string; date: string; href: string }
 
 const TYPE_ICON: Record<string, string> = {
-  Publication: "P", Blog: "B", Event: "E", Project: "R",
+  Publication: "P", Blog: "B", Event: "E", Project: "R", Tutorial: "T", Grant: "G",
 };
 
 export function AdminDashboard() {
@@ -28,12 +28,14 @@ export function AdminDashboard() {
   useEffect(() => {
     (async () => {
       try {
-        const [users, pubs, blogs, events, projects] = await Promise.all([
+        const [users, pubs, blogs, events, projects, tuts, grants] = await Promise.all([
           api.admin.getMembers(),
           api.publications.list(),
           api.blogs.list(),
           api.events.list(),
           api.projects.list(),
+          api.tutorials.list(),
+          api.grants.list(),
         ]);
         const collect = (arr: any[], type: string, href: string): PendingItem[] =>
           arr
@@ -43,13 +45,15 @@ export function AdminDashboard() {
               title: x.title ?? "Untitled",
               type,
               date: x.created_at?.split("T")[0] ?? "—",
-              href,
+              href: `${href}?id=${x.id}`,
             }));
         const all = [
           ...collect(pubs, "Publication", "/publications"),
           ...collect(blogs, "Blog", "/blog"),
           ...collect(events, "Event", "/events"),
           ...collect(projects, "Project", "/projects"),
+          ...collect(tuts, "Tutorial", "/tutorials"),
+          ...collect(grants, "Grant", "/grants"),
         ];
         setPendingItems(all);
         setStats({ users: users.length, publications: pubs.length, blog: blogs.length, pending: all.length });
