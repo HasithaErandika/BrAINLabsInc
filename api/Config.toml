@@ -1,0 +1,19 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# BrAIN Labs Backend — Config Template
+# Copy this file to   api/Config.toml   and fill in your values.
+# NEVER commit Config.toml to git — it is in .gitignore.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Root module variables ─────────────────────────────────────────────────────
+
+# Server
+port = 8080
+
+# Supabase JWT Secret (from Project Settings → API → JWT Secret)
+jwtSecret = "REPLACE_WITH_YOUR_SUPABASE_JWT_SECRET"
+
+# ... (omitted lines 15-26) ...
+
+[brainlabs.backend.db]
+supabaseUrl        = "https://ogiiemagbwqookbfgyrl.supabase.co"
+supabaseServiceKey = "REPLACE_WITH_YOUR_SUPABASE_SERVICE_ROLE_KEY"

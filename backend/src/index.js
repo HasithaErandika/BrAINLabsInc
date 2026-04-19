@@ -18,7 +18,7 @@ import { publicationsRouter } from './routes/publications.js';
 import { contentRouter } from './routes/content.js';
 
 const app = express();
-const PORT = process.env.PORT ?? 3001;
+const PORT = process.env.PORT || 3000;
 
 // ── Security & Parsing ─────────────────────────────────────────────────────────
 app.use(helmet());
